@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmEasy - Generate Bill</title>
+    <link rel="stylesheet" href="css/generate-bill.css">
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR (DARK) -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h1>PharmEasy</h1>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="add-medicine.html" class="nav-item">Add Medicine</a>
+                <a href="generate-bill.html" class="nav-item active">Generate Bill</a>
+                <a href="#" class="nav-item">Billing History</a>
+                <a href="alerts.html" class="nav-item">Low Stock</a>
+                <a href="alerts.html" class="nav-item">Expiry Alerts</a>
+                
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Generate Bill</h2>
+            </div>
+
+            <div class="billing-container">
+                <!-- LEFT COLUMN – MEDICINE SEARCH WITH AUTOCOMPLETE -->
+                <div class="add-items-section">
+                    <h3 class="section-title">Add Items</h3>
+                    <form id="addItemForm">
+                        <!-- Medicine Name with Autocomplete -->
+                        <div class="form-group">
+                            <label for="medicine-name">Medicine Name</label>
+                            <input type="text" id="medicine-name" placeholder="Type to search medicines..." autocomplete="off">
+                            <div id="suggestions" class="suggestions-container"></div>
+                        </div>
+                        <!-- Quantity and Add Button -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="quantity">Quantity</label>
+                                <input type="number" id="quantity" placeholder="Enter quantity" min="1" value="1">
+                            </div>
+                            <button type="submit" class="add-button" id="addItemBtn">➕ Add</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- RIGHT COLUMN – SELECTED ITEMS (EMPTY STATE) -->
+                <div class="cart-section">
+                    <div class="cart-header">
+                        <h3 class="cart-title">Selected Items</h3>
+                    </div>
+
+                    <!-- EMPTY STATE – shown when no items in cart -->
+                    <div id="emptyCart" class="empty-cart">
+                        <div class="empty-cart-icon">🛒</div>
+                        <div class="empty-cart-title">No items added yet</div>
+                        <div class="empty-cart-text">Search and add medicines from the left panel.</div>
+                    </div>
+
+                    <!-- CART ITEMS – hidden by default -->
+                    <div id="cartItems" class="cart-items" style="display: none;">
+                        <!-- Cart items will be dynamically inserted here -->
+                    </div>
+
+                    <!-- TOTAL SECTION – hidden by default -->
+                    <div id="totalSection" class="total-section" style="display: none;">
+                        <div class="total-row">
+                            <span>Total Amount</span>
+                            <span class="total-amount" id="totalAmount">₹0.00</span>
+                        </div>
+                        <button id="generateBillBtn" class="generate-btn">🧾 Generate Bill</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // ========== AUTHENTICATION CHECK ==========
+        requireAuth();
+
+        // ========== AUTOCOMPLETE FUNCTIONALITY ==========
+        const medicineInput = document.getElementById('medicine-name');
+        const suggestionsContainer = document.getElementById('suggestions');
+        const quantityInput = document.getElementById('quantity');
+        const addItemForm = document.getElementById('addItemForm');
+        const emptyCart = document.getElementById('emptyCart');
+        const cartItems = document.getElementById('cartItems');
+        const totalSection = document.getElementById('totalSection');
+        const totalAmount = document.getElementById('totalAmount');
+
+        // Selected medicine (when user clicks a suggestion)
+        let selectedMedicine = null;
+
+        // Cart array
+        let cart = [];
+
+        // Debounce timer for search
+        let searchTimeout = null;
+
+        // Fetch medicines from API with debounce
+        async function searchMedicines(query) {
+            if (!query || query.length < 2) {
+                suggestionsContainer.classList.remove('active');
+                return;
+            }
+
+            try {
+                const medicines = await apiCall(`/medicines/search?q=${encodeURIComponent(query)}`);
+                displaySuggestions(medicines);
+            } catch (error) {
+                console.error('Search error:', error);
+                suggestionsContainer.classList.remove('active');
+            }
+        }
+
+        // Display suggestions
+        function displaySuggestions(medicines) {
+            if (medicines.length === 0) {
+                suggestionsContainer.classList.remove('active');
+                return;
+            }
+
+            let html = '';
+            medicines.forEach(med => {
+                // Escape single quotes in medicine name for onclick
+                const safeName = med.name.replace(/'/g, "\\'");
+                html += `<div class="suggestion-item" onclick="selectMedicine('${med._id}', '${safeName}', ${med.price}, ${med.totalStock})">
+                            <strong>${med.name}</strong> 
+                            <small>₹${med.price.toFixed(2)}</small>
+                            <small style="display:block; color:#7a7a7a;">Stock: ${med.totalStock}</small>
+                        </div>`;
+            });
+            suggestionsContainer.innerHTML = html;
+            suggestionsContainer.classList.add('active');
+        }
+
+        // Select a medicine from suggestions
+        window.selectMedicine = function(id, name, price, stock) {
+            medicineInput.value = name;
+            selectedMedicine = { id, name, price, stock };
+            suggestionsContainer.classList.remove('active');
+        };
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!medicineInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.classList.remove('active');
+            }
+        });
+
+        // Trigger suggestions on input with debounce
+        medicineInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = medicineInput.value.trim();
+            
+            if (query.length < 2) {
+                suggestionsContainer.classList.remove('active');
+                return;
+            }
+            
+            // Debounce: wait 300ms after user stops typing
+            searchTimeout = setTimeout(() => {
+                searchMedicines(query);
+            }, 300);
+        });
+
+        // ========== ADD ITEM TO CART ==========
+        addItemForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (!selectedMedicine) {
+                showNotification('Please select a medicine from the suggestions', 'warning');
+                return;
+            }
+
+            const quantity = parseInt(quantityInput.value);
+            if (!quantity || quantity < 1) {
+                showNotification('Please enter a valid quantity', 'warning');
+                return;
+            }
+
+            // Check if item already in cart
+            const existingItem = cart.find(item => item.id === selectedMedicine.id);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: selectedMedicine.id,
+                    name: selectedMedicine.name,
+                    price: selectedMedicine.price,
+                    quantity: quantity
+                });
+            }
+
+            // Update cart display
+            updateCartDisplay();
+
+            // Clear input fields
+            medicineInput.value = '';
+            quantityInput.value = 1;
+            selectedMedicine = null;
+        });
+
+        // ========== REMOVE ITEM FROM CART ==========
+        window.removeItem = function(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        };
+
+        // ========== UPDATE CART UI ==========
+        function updateCartDisplay() {
+            if (cart.length === 0) {
+                // Show empty state, hide cart items and total
+                emptyCart.style.display = 'block';
+                cartItems.style.display = 'none';
+                totalSection.style.display = 'none';
+            } else {
+                // Hide empty state, show cart items and total
+                emptyCart.style.display = 'none';
+                cartItems.style.display = 'block';
+                totalSection.style.display = 'block';
+
+                // Build cart items HTML
+                let html = '';
+                let total = 0;
+                cart.forEach((item, index) => {
+                    const itemTotal = item.price * item.quantity;
+                    total += itemTotal;
+                    html += `
+                        <div class="cart-item">
+                            <div class="cart-item-info">
+                                <div class="cart-item-name">${item.name}</div>
+                                <div class="cart-item-price">Quantity: ${item.quantity} × ₹${item.price.toFixed(2)}</div>
+                            </div>
+                            <div class="cart-item-amount">₹${itemTotal.toFixed(2)}</div>
+                            <button class="remove-btn" onclick="removeItem(${index})">Remove</button>
+                        </div>
+                    `;
+                });
+                cartItems.innerHTML = html;
+                totalAmount.textContent = `₹${total.toFixed(2)}`;
+            }
+        }
+
+       // ========== GENERATE BILL ==========
+document.getElementById('generateBillBtn').addEventListener('click', async () => {
+    if (cart.length === 0) {
+        showNotification('No items in cart', 'error');
+        return;
+    }
+
+    try {
+        // Prepare request payload for backend API
+        const requestPayload = {
+            items: cart.map(item => ({
+                medicineName: item.name,
+                quantityRequired: item.quantity
+            })),
+            customerName: 'Walk-in Customer',
+            paymentMethod: 'Cash'
+        };
+
+        // Call backend API to generate bill
+        const response = await apiCall('/generate-bill', {
+            method: 'POST',
+            body: JSON.stringify(requestPayload)
+        });
+
+        // Calculate display values
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const tax = subtotal * 0.05;
+        const total = response.totalAmount || (subtotal + tax);
+
+        // Generate date string
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        }) + ', ' + now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+
+        // Prepare bill data for success page
+        const billData = {
+            billId: response.billNumber || `#${response.billId}`,
+            date: dateStr,
+            items: cart.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price
+            })),
+            subtotal: subtotal,
+            tax: tax,
+            total: total
+        };
+
+        // Store in sessionStorage
+        sessionStorage.setItem('currentBill', JSON.stringify(billData));
+
+        // Show success notification
+        showNotification('Bill generated successfully!', 'success');
+
+        // Redirect to success page
+        setTimeout(() => {
+            window.location.href = 'bill-success.html';
+        }, 500);
+
+    } catch (error) {
+        console.error('Bill generation error:', error);
+        // Error notification is already shown by apiCall
+    }
+});
+    </script>
+</body>
+</html>

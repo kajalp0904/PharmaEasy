@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmEasy - Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <script src="js/api.js"></script>
+    <div class="container">
+        <!-- SIDEBAR (DARK) -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h1>PharmEasy</h1>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="nav-item active">Dashboard</a>
+                <a href="add-medicine.html" class="nav-item">Add Medicine</a>
+                <a href="generate-bill.html" class="nav-item">Generate Bill</a>
+                <a href="billing-history.html" class="nav-item">Billing History</a>
+                <a href="alerts.html" class="nav-item">Low Stock</a>
+                <a href="alerts.html" class="nav-item">Expiry Alerts</a>
+               <!-- <a href="#" class="nav-item">Restock</a>-->
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Dashboard</h2>
+                <button id="logoutBtn" class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <!-- ===== LIVE MEDICINE SEARCH WITH AUTOCOMPLETE ===== -->
+            <div class="search-section">
+                <div class="search-title">
+                    <span>🔍</span> Search Medicine
+                </div>
+                <div class="search-bar">
+                    <div class="search-wrapper">
+                        <input type="text" id="medicineSearchInput" class="search-input" placeholder="Type medicine name..." autocomplete="off">
+                        <div id="suggestionsDropdown" class="suggestions-dropdown"></div>
+                    </div>
+                    <button id="searchBtn" class="search-btn">
+                        <span>🔍</span> Search
+                    </button>
+                </div>
+
+                <!-- Loading indicator (hidden by default) -->
+                <div id="loadingIndicator" style="display: none; margin-top: 15px; color: #ff6b35;">
+                    <span>⏳ Loading...</span>
+                </div>
+
+                <!-- SEARCH RESULTS (initially hidden) -->
+                <div id="searchResults" class="results-container"></div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <h2 class="section-title">Quick Actions</h2>
+            <div class="quick-actions">
+                <div class="quick-action-card" onclick="location.href='add-medicine.html'">
+                    <div class="quick-action-icon">➕</div>
+                    <div>
+                        <div class="quick-action-title">Add Medicine</div>
+                        <div class="quick-action-desc">New stock entry</div>
+                    </div>
+                </div>
+                <div class="quick-action-card" onclick="location.href='generate-bill.html'">
+                    <div class="quick-action-icon">🧾</div>
+                    <div>
+                        <div class="quick-action-title">Generate Bill</div>
+                        <div class="quick-action-desc">Create invoice</div>
+                    </div>
+                </div>
+                <!--<div class="quick-action-card">
+                    <div class="quick-action-icon">📊</div>
+                    <div>
+                        <div class="quick-action-title">View Reports</div>
+                        <div class="quick-action-desc">Sales analytics</div>
+                    </div>
+                </div>
+                <div class="quick-action-card">
+                    <div class="quick-action-icon">📦</div>
+                    <div>
+                        <div class="quick-action-title">Restock</div>
+                        <div class="quick-action-desc">Order medicines</div>
+                    </div>
+                </div>-->
+            </div>
+
+            <!-- RECENT MEDICINES – EMPTY STATE (no medicines added yet) -->
+            <h2 class="section-title">PharmEasy</h2>
+            <div class="empty-state">
+                <div class="empty-state-icon">💊</div>
+                <div class="empty-state-title"></div>
+                <div class="empty-state-text"></div>
+                <a href="add-medicine.html" class="empty-state-btn">➕ Add Medicine</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== AUTHENTICATION CHECK ==========
+        requireAuth();
+
+        // ========== CONFIGURATION ==========
+        let searchTimeout = null;
+        let selectedMedicineId = null;
+
+        // ========== DOM ELEMENTS ==========
+        const searchInput = document.getElementById('medicineSearchInput');
+        const suggestionsDropdown = document.getElementById('suggestionsDropdown');
+        const searchResults = document.getElementById('searchResults');
+        const searchBtn = document.getElementById('searchBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // ========== FETCH MEDICINE SUGGESTIONS ==========
+        async function fetchMedicineSuggestions(query) {
+            if (!query || query.length < 2) {
+                suggestionsDropdown.classList.remove('active');
+                return [];
+            }
+
+            try {
+                const medicines = await apiCall(`/medicines/search?q=${encodeURIComponent(query)}`);
+                return medicines || [];
+            } catch (error) {
+                console.error('Error fetching medicines:', error);
+                return [];
+            }
+        }
+
+        // ========== DISPLAY SUGGESTIONS DROPDOWN ==========
+        async function showSuggestions() {
+            const query = searchInput.value.trim();
+            
+            if (query.length < 2) {
+                suggestionsDropdown.classList.remove('active');
+                return;
+            }
+
+            const medicines = await fetchMedicineSuggestions(query);
+            
+            if (medicines.length === 0) {
+                suggestionsDropdown.classList.remove('active');
+                return;
+            }
+
+            let html = '';
+            medicines.forEach(med => {
+                html += `<div class="suggestion-item" onclick="selectMedicine('${med._id}', '${med.name.replace(/'/g, "\\'")}')">
+                            <strong>${med.name}</strong> 
+                            <small>₹${med.price?.toFixed(2) || '0.00'} | Stock: ${med.totalStock || 0}</small>
+                        </div>`;
+            });
+            suggestionsDropdown.innerHTML = html;
+            suggestionsDropdown.classList.add('active');
+        }
+
+        // ========== DEBOUNCED INPUT HANDLER ==========
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(showSuggestions, 300);
+        });
+
+        // ========== HIDE SUGGESTIONS WHEN CLICKING OUTSIDE ==========
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
+                suggestionsDropdown.classList.remove('active');
+            }
+        });
+
+        // ========== SELECT A MEDICINE FROM SUGGESTIONS ==========
+        window.selectMedicine = function(medicineId, medicineName) {
+            searchInput.value = medicineName;
+            selectedMedicineId = medicineId;
+            suggestionsDropdown.classList.remove('active');
+            performSearch(medicineId, medicineName);
+        };
+
+        // ========== SEARCH BUTTON / ENTER ==========
+        function searchMedicine() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                searchResults.classList.remove('active');
+                return;
+            }
+
+            if (selectedMedicineId) {
+                performSearch(selectedMedicineId, query);
+            } else {
+                fetch(`${API_BASE}/medicines/search?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(medicines => {
+                        if (medicines.length > 0) {
+                            const med = medicines[0];
+                            selectedMedicineId = med._id;
+                            performSearch(med._id, med.name);
+                        } else {
+                            searchResults.innerHTML = `
+                                <div class="no-results">
+                                    <span>🔍</span>
+                                    No medicine found matching "${query}"
+                                </div>
+                            `;
+                            searchResults.classList.add('active');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        showError('Failed to search. Check backend connection.');
+                    });
+            }
+        }
+
+        // ========== PERFORM SEARCH (FETCH MEDICINE + BATCHES) ==========
+        async function performSearch(medicineId, medicineName) {
+            loadingIndicator.style.display = 'block';
+            searchResults.classList.remove('active');
+
+            try {
+                const medRes = await fetch(`${API_BASE}/medicines/${medicineId}`);
+                const medicine = await medRes.json();
+                
+                if (!medicine) {
+                    throw new Error('Medicine not found');
+                }
+
+                const batchRes = await fetch(`${API_BASE}/batches?medicine=${medicineId}`);
+                const batchData = await batchRes.json();
+                const batches = batchData.success ? batchData.batches : [];
+
+                displayMedicineDetails(medicine, batches);
+                
+            } catch (error) {
+                console.error('Error fetching details:', error);
+                searchResults.innerHTML = `
+                    <div class="no-results">
+                        <span>⚠️</span>
+                        Error loading medicine details. Please try again.
+                    </div>
+                `;
+                searchResults.classList.add('active');
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // ========== DISPLAY MEDICINE DETAILS – HIDE ZERO VALUES & NO "undefined" ==========
+        function displayMedicineDetails(medicine, batches) {
+            // Filter out batches with quantity 0
+            const activeBatches = batches.filter(batch => batch.quantity > 0);
+            
+            const totalStock = medicine.totalStock || 0;
+            const minStock = medicine.minimumStock || 0;
+            const price = medicine.price || 0;
+            const stockStatus = totalStock < minStock ? 'Low Stock' : 'Good';
+            const statusClass = totalStock < minStock ? 'badge-low' : 'badge-good';
+
+            // Build medicine details grid items only if values are > 0
+            let detailsHtml = '';
+            if (price > 0) {
+                detailsHtml += `
+                    <div class="detail-item">
+                        <span class="detail-label">Price</span>
+                        <span class="detail-value">₹${price.toFixed(2)}</span>
+                    </div>
+                `;
+            }
+            if (totalStock > 0) {
+                detailsHtml += `
+                    <div class="detail-item">
+                        <span class="detail-label">Total Stock</span>
+                        <span class="detail-value">${totalStock} units</span>
+                    </div>
+                `;
+            }
+            if (minStock > 0) {
+                detailsHtml += `
+                    <div class="detail-item">
+                        <span class="detail-label">Minimum Stock</span>
+                        <span class="detail-value">${minStock} units</span>
+                    </div>
+                `;
+            }
+            // Always show active batches count
+            detailsHtml += `
+                <div class="detail-item">
+                    <span class="detail-label">Active Batches</span>
+                    <span class="detail-value">${activeBatches.length}</span>
+                </div>
+            `;
+
+            // Batch rows HTML (only for active batches)
+            let batchesHtml = '';
+            if (activeBatches.length === 0) {
+                batchesHtml = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No active batches found for this medicine.</td></tr>`;
+            } else {
+                const today = new Date();
+                activeBatches.forEach(batch => {
+                    const expiryDate = new Date(batch.expiryDate);
+                    const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    let expiryClass = 'expiry-good';
+                    let expiryText = `${daysLeft} days`;
+                    
+                    if (daysLeft <= 0) {
+                        expiryClass = 'expiry-danger';
+                        expiryText = `Expired`;
+                    } else if (daysLeft <= 30) {
+                        expiryClass = 'expiry-danger';
+                        expiryText = `${daysLeft} days (expiring soon)`;
+                    } else if (daysLeft <= 90) {
+                        expiryClass = 'expiry-warning';
+                        expiryText = `${daysLeft} days`;
+                    }
+
+                    batchesHtml += `
+                        <tr>
+                            <td><strong>${batch.batchNumber}</strong></td>
+                            <td>${batch.location}</td>
+                            <td>${batch.quantity}</td>
+                            <td>${new Date(batch.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                            <td><span class="expiry-badge ${expiryClass}">${expiryText}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const html = `
+                <div class="medicine-header">
+                    <div class="medicine-title">${medicine.name}</div>
+                    <div class="medicine-badges">
+                        <span class="medicine-badge ${statusClass}">${stockStatus}</span>
+                        <span class="medicine-badge" style="background: #e3f2fd; color: #0d47a1;">${medicine.category || 'Uncategorized'}</span>
+                    </div>
+                </div>
+                
+                <div class="medicine-details-grid">
+                    ${detailsHtml}
+                </div>
+                
+                <h4 style="margin: 20px 0 12px; font-size: 18px; color: #2d2d2d;">Batch Details</h4>
+                <div class="batch-table-container">
+                    <table class="batch-table">
+                        <thead>
+                            <tr>
+                                <th>Batch Number</th>
+                                <th>Location</th>
+                                <th>Quantity</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${batchesHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            searchResults.innerHTML = html;
+            searchResults.classList.add('active');
+        }
+
+        function showError(message) {
+            searchResults.innerHTML = `
+                <div class="no-results">
+                    <span>⚠️</span>
+                    ${message}
+                </div>
+            `;
+            searchResults.classList.add('active');
+        }
+
+        // ========== EVENT LISTENERS ==========
+        searchBtn.addEventListener('click', searchMedicine);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchMedicine();
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            selectedMedicineId = null;
+        });
+    </script>
+</body>
+</html>

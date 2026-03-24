@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmEasy - Locations</title>
+    <link rel="stylesheet" href="css/locations.css">
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR (DARK) -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h1>PharmEasy</h1>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="add-medicine.html" class="nav-item">Add Medicine</a>
+                <a href="generate-bill.html" class="nav-item">Generate Bill</a>
+                <a href="billing-history.html" class="nav-item">Billing History</a>
+                <a href="alerts.html" class="nav-item">Alerts</a>
+                <a href="locations.html" class="nav-item active">Locations</a>
+                <!-- <a href="#" class="nav-item">Restock</a>-->
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <div>
+                    <h2>Storage Locations</h2>
+                    <p class="header-subtitle">Manage warehouse storage locations</p>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalLocations">0</div>
+                        <div class="stat-label">Total Locations</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value free" id="freeLocations">0</div>
+                        <div class="stat-label">Free</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value occupied" id="occupiedLocations">0</div>
+                        <div class="stat-label">Occupied</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILTER TABS -->
+            <div class="filter-tabs">
+                <button class="filter-btn active" data-filter="all">All Locations</button>
+                <button class="filter-btn" data-filter="free">Free Only</button>
+                <button class="filter-btn" data-filter="occupied">Occupied Only</button>
+            </div>
+
+            <!-- SEARCH BAR -->
+            <div class="search-container">
+                <input type="text" class="search-box" placeholder="🔍 Search by location code (e.g., S1-R1)" id="searchInput">
+            </div>
+
+            <!-- LOCATIONS GRID -->
+            <div class="locations-grid" id="locationsGrid">
+                <div class="loading">Loading locations...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication on page load
+        requireAuth();
+
+        let allLocations = [];
+        let currentFilter = 'all';
+
+        // ========== LOAD LOCATIONS FROM BACKEND ==========
+        async function loadLocations() {
+            try {
+                const locations = await apiCall('/locations', { method: 'GET' });
+                allLocations = locations;
+
+                // Update stats
+                const total = locations.length;
+                const free = locations.filter(loc => !loc.isOccupied).length;
+                const occupied = total - free;
+
+                document.getElementById('totalLocations').textContent = total;
+                document.getElementById('freeLocations').textContent = free;
+                document.getElementById('occupiedLocations').textContent = occupied;
+
+                // Render locations
+                renderLocations();
+
+            } catch (error) {
+                console.error('Error loading locations:', error);
+                showNotification('Failed to load locations', 'error');
+                document.getElementById('locationsGrid').innerHTML = `
+                    <div class="error-state">
+                        <div class="error-icon">❌</div>
+                        <div class="error-title">Failed to load locations</div>
+                        <div class="error-text">Please try refreshing the page</div>
+                    </div>
+                `;
+            }
+        }
+
+        // ========== RENDER LOCATIONS ==========
+        function renderLocations() {
+            const grid = document.getElementById('locationsGrid');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            // Filter locations
+            let filteredLocations = allLocations;
+
+            // Apply filter
+            if (currentFilter === 'free') {
+                filteredLocations = filteredLocations.filter(loc => !loc.isOccupied);
+            } else if (currentFilter === 'occupied') {
+                filteredLocations = filteredLocations.filter(loc => loc.isOccupied);
+            }
+
+            // Apply search
+            if (searchTerm) {
+                filteredLocations = filteredLocations.filter(loc => 
+                    loc.code.toLowerCase().includes(searchTerm) ||
+                    (loc.medicineName && loc.medicineName.toLowerCase().includes(searchTerm)) ||
+                    (loc.batchNumber && loc.batchNumber.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            // Render
+            if (filteredLocations.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <div class="empty-state-title">No locations found</div>
+                        <div class="empty-state-text">Try adjusting your filters or search</div>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredLocations.map(loc => {
+                const statusClass = loc.isOccupied ? 'occupied' : 'free';
+                const statusText = loc.isOccupied ? 'Occupied' : 'Free';
+                
+                let detailsHtml = '';
+                if (loc.isOccupied && loc.medicineName) {
+                    const expiryDate = loc.expiryDate ? new Date(loc.expiryDate).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : 'N/A';
+
+                    detailsHtml = `
+                        <div class="location-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Medicine:</span>
+                                <span class="detail-value">${loc.medicineName}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Batch:</span>
+                                <span class="detail-value">${loc.batchNumber || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Quantity:</span>
+                                <span class="detail-value">${loc.quantity || 0} units</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Expiry:</span>
+                                <span class="detail-value">${expiryDate}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="location-card ${statusClass}">
+                        <div class="location-header">
+                            <div class="location-code">${loc.code}</div>
+                            <div class="location-status ${statusClass}">${statusText}</div>
+                        </div>
+                        ${detailsHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ========== FILTER TABS ==========
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                renderLocations();
+            });
+        });
+
+        // ========== SEARCH ==========
+        document.getElementById('searchInput').addEventListener('input', function() {
+            renderLocations();
+        });
+
+        // Load locations on page load
+        window.addEventListener('DOMContentLoaded', loadLocations);
+    </script>
+</body>
+</html>

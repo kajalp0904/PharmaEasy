@@ -1,0 +1,107 @@
+/* ========== LOGIN PAGE SPECIFIC STYLES ========== */
+.login-container {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    margin-top: 80px;
+    flex-wrap: wrap;
+}
+
+.login-form {
+    flex: 1 1 400px;
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(255,107,53,0.1);
+    border: 1px solid var(--border-color);
+}
+
+.login-form h2 {
+    color: var(--orange);
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.login-form p {
+    color: var(--gray);
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--gray);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    font-size: 16px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.form-group input:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+}
+
+.btn-login {
+    width: 100%;
+    padding: 14px;
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 40px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    background: #e05530;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.signup-text {
+    text-align: center;
+    margin-top: 25px;
+    color: var(--gray);
+}
+
+.signup-text a {
+    color: var(--orange);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.signup-text a:hover {
+    text-decoration: underline;
+}
+
+.login-image {
+    flex: 1 1 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-image img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(255,107,53,0.15);
+    border: 3px solid var(--orange);
+}

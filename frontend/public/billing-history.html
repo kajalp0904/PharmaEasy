@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmEasy - Billing History</title>
+    <link rel="stylesheet" href="css/billing-history.css">
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR (DARK) – Billing History active -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h1>PharmEasy</h1>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="add-medicine.html" class="nav-item">Add Medicine</a>
+                <a href="generate-bill.html" class="nav-item">Generate Bill</a>
+                <a href="billing-history.html" class="nav-item active">Billing History</a>
+                <a href="alerts.html" class="nav-item">Low Stock</a>
+                <a href="alerts.html" class="nav-item">Expiry Alerts</a>
+                
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Billing History</h2>
+                <div class="search-container">
+                    <input type="text" class="search-box" placeholder="🔍 Search by Bill ID or Medicine" id="searchInput">
+                </div>
+            </div>
+
+            <!-- BILLS TABLE -->
+            <div id="tableContainer" class="table-container" style="display: none;">
+                <table class="bills-table" id="billsTable">
+                    <thead>
+                        <tr>
+                            <th>BILL ID</th>
+                            <th>DATE & TIME</th>
+                            <th>MEDICINES</th>
+                            <th>AMOUNT</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billsTableBody">
+                        <!-- Bills will be loaded dynamically from backend -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- EMPTY STATE -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📜</div>
+                <div class="empty-state-title">No billing history yet</div>
+                <div class="empty-state-text">You haven't generated any bills. Create your first bill now.</div>
+                <a href="generate-bill.html" class="empty-state-btn">➕ Generate Bill</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication on page load
+        requireAuth();
+
+        // ========== FETCH BILLS FROM BACKEND ==========
+        async function loadBills() {
+            try {
+                const bills = await apiCall('/bills', { method: 'GET' });
+                
+                const tableContainer = document.getElementById('tableContainer');
+                const emptyState = document.getElementById('emptyState');
+                const tbody = document.getElementById('billsTableBody');
+                
+                if (!bills || bills.length === 0) {
+                    // Show empty state
+                    tableContainer.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                // Show table and populate with bills
+                tableContainer.style.display = 'block';
+                emptyState.style.display = 'none';
+                
+                // Clear existing rows
+                tbody.innerHTML = '';
+                
+                // Add bill rows
+                bills.forEach(bill => {
+                    const row = document.createElement('tr');
+                    
+                    // Format date
+                    const date = new Date(bill.createdAt);
+                    const formattedDate = date.toLocaleDateString('en-GB', { 
+                        day: '2-digit', 
+                        month: 'short', 
+                        year: 'numeric' 
+                    });
+                    const formattedTime = date.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                    
+                    // Get medicine names
+                    const medicineNames = bill.items.map(item => item.medicineName).join(', ');
+                    const itemCount = bill.items.length;
+                    
+                    row.innerHTML = `
+                        <td>${bill.billNumber || `#BL-${bill._id.slice(-6)}`}</td>
+                        <td>${formattedDate}, ${formattedTime}</td>
+                        <td>
+                            <span class="medicine-list">${medicineNames}</span>
+                            <span class="items-count">${itemCount} item${itemCount !== 1 ? 's' : ''}</span>
+                        </td>
+                        <td>₹${bill.totalAmount.toFixed(2)}</td>
+                        <td><a href="bill-success.html?id=${bill._id}" class="view-btn">View</a></td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+                // Initialize search after bills are loaded
+                initializeSearch();
+                
+            } catch (error) {
+                console.error('Error loading bills:', error);
+                showNotification('Failed to load billing history', 'error');
+            }
+        }
+
+        // ========== SEARCH FUNCTIONALITY ==========
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                const tableRows = document.querySelectorAll('#billsTable tbody tr');
+                
+                tableRows.forEach(row => {
+                    const billId = row.cells[0].textContent.toLowerCase();
+                    const medicines = row.cells[2].textContent.toLowerCase();
+                    
+                    if (billId.includes(searchTerm) || medicines.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Load bills on page load
+        window.addEventListener('DOMContentLoaded', loadBills);
+    </script>
+</body>
+</html>

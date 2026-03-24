@@ -1,0 +1,217 @@
+/* ========== ADD MEDICINE PAGE – DARK SIDEBAR THEME ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f5f5f5;
+    color: #2d2d2d;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ===== SIDEBAR (DARK) ===== */
+.sidebar {
+    width: 260px;
+    background-color: #2d2d2d;
+    padding: 30px 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar-logo {
+    padding: 0 30px;
+    margin-bottom: 40px;
+}
+
+.sidebar-logo h1 {
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.nav-item {
+    padding: 14px 30px;
+    color: #b0b0b0;
+    text-decoration: none;
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+    background-color: #3a3a3a;
+    color: #ffffff;
+}
+
+.nav-item.active {
+    background-color: #3a3a3a;
+    color: #ff6b35;
+    border-left-color: #ff6b35;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+    margin-left: 260px;
+    flex: 1;
+    padding: 30px 40px;
+}
+
+.header {
+    background-color: #ffffff;
+    padding: 24px 40px;
+    margin: -30px -40px 30px -40px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.header h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #2d2d2d;
+}
+
+/* ===== FORM ===== */
+.form-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    max-width: 700px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a4a4a;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 15px;
+    color: #2d2d2d;
+    transition: border-color 0.2s;
+    background-color: #fafafa;
+    font-family: inherit;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #ff6b35;
+    background-color: #ffffff;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 16px;
+    background-color: #ff6b35;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.submit-button:hover {
+    background-color: #ff5722;
+}
+
+.submit-button:active {
+    transform: scale(0.98);
+}
+
+.submit-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ===== NOTIFICATION ===== */
+.notification {
+    margin-top: 20px;
+    padding: 14px 20px;
+    border-radius: 6px;
+    display: none;
+}
+
+.notification.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-left: 4px solid #2e7d32;
+    display: block;
+}
+
+.notification.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #c62828;
+    display: block;
+}
+
+/* ===== AUTOCOMPLETE DROPDOWN ===== */
+.autocomplete-dropdown {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    width: calc(100% - 32px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: -2px;
+}
+
+.autocomplete-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover {
+    background-color: #f5f5f5;
+}
+
+.autocomplete-item strong {
+    color: #2d2d2d;
+    font-size: 15px;
+}
+
+.autocomplete-item small {
+    color: #666;
+    font-size: 13px;
+}

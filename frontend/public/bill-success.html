@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmEasy - Bill Generated</title>
+    <link rel="stylesheet" href="css/bill-success.css">
+    <!-- PDF generation libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR (DARK) – Generate Bill active -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h1>PharmEasy</h1>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="add-medicine.html" class="nav-item">Add Medicine</a>
+                <a href="generate-bill.html" class="nav-item active">Generate Bill</a>
+                <a href="billing-history.html" class="nav-item">Billing History</a>
+                <a href="alerts.html" class="nav-item">Low Stock</a>
+                <a href="alerts.html" class="nav-item">Expiry Alerts</a>
+                
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Bill Generated Successfully</h2>
+            </div>
+
+            <div class="success-card">
+                <div class="success-icon">
+                    <span>✓</span>
+                </div>
+                <h3 class="success-title">Bill Created Successfully!</h3>
+                <p class="success-message">The transaction has been completed and recorded</p>
+
+                <!-- Bill ID and Date -->
+                <div class="bill-details" id="billDetails">
+                    <div class="bill-detail-item">
+                        <div class="bill-detail-label">Bill ID</div>
+                        <div class="bill-detail-value" id="billId">#BL-2026-00234</div>
+                    </div>
+                    <div class="bill-detail-item">
+                        <div class="bill-detail-label">Date</div>
+                        <div class="bill-detail-value" id="billDate">09 Feb 2026, 2:45 PM</div>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <div class="table-container">
+                    <table class="bill-table" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Medicine Name</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Dynamic rows from sessionStorage -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals -->
+                <div class="totals" id="totalsSection">
+                    <div class="total-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">₹55.00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Tax (5%)</span>
+                        <span id="tax">₹2.75</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>Total Amount</span>
+                        <span id="total">₹57.75</span>
+                    </div>
+                </div>
+
+                <!-- Buttons: OK and Download PDF -->
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <a href="dashboard.html" class="ok-button" style="flex: 1;">✓ OK</a>
+                    <button id="downloadPdfBtn" class="ok-button" style="flex: 1; background-color: #4a90e2;">📄 Download PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== EXAMPLE BILL DATABASE (FOR DEMO) ==========
+        const exampleBills = {
+            'BL-2026-00234': {
+                billId: '#BL-2026-00234',
+                date: '09 Feb 2026, 2:45 PM',
+                items: [
+                    { name: 'Paracetamol 500mg', quantity: 2, price: 15.00 },
+                    { name: 'Ibuprofen 400mg', quantity: 1, price: 25.00 }
+                ],
+                subtotal: 55.00,
+                tax: 2.75,
+                total: 57.75
+            }
+        };
+
+        // ========== LOAD BILL DATA ==========
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        function loadBillData() {
+            const billId = getUrlParameter('id');
+            
+            if (billId) {
+                if (exampleBills[billId]) {
+                    displayBillData(exampleBills[billId]);
+                    return;
+                }
+                
+                document.getElementById('billId').textContent = billId;
+                document.getElementById('billDate').textContent = 'Loading...';
+                
+                document.getElementById('itemsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px;">
+                            Loading bill details from server...
+                        </td>
+                    </tr>
+                `;
+            } else {
+                const sessionBill = sessionStorage.getItem('currentBill');
+                if (sessionBill) {
+                    const bill = JSON.parse(sessionBill);
+                    displayBillData(bill);
+                } else {
+                    displayBillData(exampleBills['BL-2026-00234']);
+                }
+            }
+        }
+
+        function displayBillData(bill) {
+            document.getElementById('billId').textContent = bill.billId;
+            document.getElementById('billDate').textContent = bill.date;
+
+            const tbody = document.getElementById('itemsTableBody');
+            tbody.innerHTML = bill.items.map(item => `
+                <tr>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.quantity}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td>₹${(item.quantity * item.price).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('subtotal').textContent = `₹${bill.subtotal.toFixed(2)}`;
+            document.getElementById('tax').textContent = `₹${bill.tax.toFixed(2)}`;
+            document.getElementById('total').textContent = `₹${bill.total.toFixed(2)}`;
+        }
+
+        // ========== PDF DOWNLOAD FUNCTION ==========
+        function downloadPDF() {
+            // Gather data from DOM
+            const billId = document.getElementById('billId').innerText;
+            const date = document.getElementById('billDate').innerText;
+            const subtotal = document.getElementById('subtotal').innerText;
+            const tax = document.getElementById('tax').innerText;
+            const total = document.getElementById('total').innerText;
+
+            // Get table rows
+            const rows = [];
+            const tableRows = document.querySelectorAll('#itemsTableBody tr');
+            tableRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 4) {
+                    rows.push([
+                        cells[0].innerText,
+                        cells[1].innerText,
+                        cells[2].innerText,
+                        cells[3].innerText
+                    ]);
+                }
+            });
+
+            // Define PDF document
+            const docDefinition = {
+                pageSize: 'A4',
+                pageMargins: [40, 60, 40, 60],
+                header: {
+                    text: 'PharmEasy - Invoice',
+                    alignment: 'center',
+                    margin: [0, 20, 0, 10],
+                    fontSize: 18,
+                    bold: true
+                },
+                content: [
+                    { text: 'Bill of Sale', style: 'subheader', alignment: 'center', margin: [0, 0, 0, 20] },
+                    {
+                        columns: [
+                            { text: `Bill ID: ${billId}`, alignment: 'left', width: '50%' },
+                            { text: `Date: ${date}`, alignment: 'right', width: '50%' }
+                        ],
+                        margin: [0, 0, 0, 20]
+                    },
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths: ['*', 'auto', 'auto', 'auto'],
+                            body: [
+                                ['Medicine Name', 'Quantity', 'Price', 'Amount'],
+                                ...rows
+                            ]
+                        },
+                        layout: 'lightHorizontalLines',
+                        margin: [0, 0, 0, 20]
+                    },
+                    {
+                        columns: [
+                            { text: '', width: '*', alignment: 'right' },
+                            {
+                                width: 'auto',
+                                stack: [
+                                    { text: `Subtotal: ${subtotal}`, alignment: 'right' },
+                                    { text: `Tax (5%): ${tax}`, alignment: 'right' },
+                                    { text: `Total: ${total}`, alignment: 'right', bold: true, fontSize: 12 }
+                                ]
+                            }
+                        ]
+                    },
+                    { text: 'Thank you for your business!', alignment: 'center', margin: [0, 30, 0, 0], italics: true }
+                ],
+                styles: {
+                    subheader: { fontSize: 14, bold: true }
+                }
+            };
+
+            // Generate and download PDF
+            pdfMake.createPdf(docDefinition).download(`Invoice_${billId.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+        }
+
+        // Initialize
+        loadBillData();
+
+        // Add event listener to download button
+        document.getElementById('downloadPdfBtn').addEventListener('click', downloadPDF);
+    </script>
+</body>
+</html>

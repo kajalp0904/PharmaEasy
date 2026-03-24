@@ -1,0 +1,70 @@
+/* ========== HOMEPAGE SPECIFIC STYLES ========== */
+.homepage-layout {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-top: 60px;
+    flex-wrap: wrap;
+}
+
+.homepage-left {
+    flex: 1 1 400px;
+}
+
+.homepage-label {
+    color: var(--orange);
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+}
+
+.homepage-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--orange);
+    line-height: 1.2;
+    margin-bottom: 30px;
+}
+
+.homepage-title span {
+    color: var(--gray);
+    font-size: 36px;
+    font-weight: 600;
+    display: block;
+}
+
+.homepage-textbox {
+    background: white;
+    border-left: 6px solid var(--orange);
+    border-radius: 0 12px 12px 0;
+    padding: 25px 30px;
+    margin-bottom: 30px;
+    max-width: 700px;
+    box-shadow: 0 8px 20px rgba(255,107,53,0.08);
+}
+
+.homepage-textbox p {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.homepage-textbox p:last-child {
+    margin-bottom: 0;
+}
+
+.homepage-image {
+    flex: 1 1 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.homepage-image img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(255,107,53,0.15);
+    border: 3px solid var(--orange);
+}

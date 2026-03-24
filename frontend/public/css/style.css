@@ -1,0 +1,140 @@
+/* ========== GLOBAL STYLES – SAME ON EVERY PAGE ========== */
+:root {
+    --orange: #ff6b35;
+    --light-orange: #fff3e9;
+    --white: #ffffff;
+    --gray: #4a4a4a;
+    --light-gray: #f5f5f5;
+    --border-color: #e0e0e0;
+    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --radius: 0.5rem;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--white);
+    color: var(--gray);
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ===== HEADER & NAVBAR (SAME ON ALL PAGES) ===== */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-bottom: 2px solid var(--orange);
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--orange);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.logo-text {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 1px;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--gray);
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 30px;
+    transition: 0.2s;
+}
+
+.nav-link:hover {
+    background: var(--light-orange);
+    color: var(--orange);
+}
+
+.nav-link.active {
+    background: var(--orange);
+    color: white;
+}
+
+/* ===== BUTTONS – GLOBAL ===== */
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: 0.2s;
+    border: 2px solid var(--orange);
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--orange);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #e05530;
+    border-color: #e05530;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+    background: white;
+    color: var(--orange);
+}
+
+.btn-outline:hover {
+    background: var(--orange);
+    color: white;
+}
+
+/* ===== FOOTER – SAME ON ALL PAGES ===== */
+footer {
+    margin-top: 80px;
+    padding: 30px 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    color: #888;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.text-center { text-align: center; }
+.mt-4 { margin-top: 2rem; }
+.mb-4 { margin-bottom: 2rem; }

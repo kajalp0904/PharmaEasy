@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmEasy - Add Medicine</title>
+    <link rel="stylesheet" href="css/add-medicine.css">
+    <script src="js/api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR (DARK) -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h1>PharmEasy</h1>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="add-medicine.html" class="nav-item active">Add Medicine</a>
+                <a href="generate-bill.html" class="nav-item">Generate Bill</a>
+                <a href="billing-history.html" class="nav-item">Billing History</a>
+                <a href="alerts.html" class="nav-item">Low Stock</a>
+                <a href="alerts.html" class="nav-item">Expiry Alerts</a>
+               
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h2>Add Medicine & Batch</h2>
+            </div>
+
+            <!-- MEDICINE FORM -->
+            <div class="form-container">
+                <h3>Add New Medicine</h3>
+                <form id="addMedicineForm">
+                    <div class="form-group">
+                        <label for="medicine-name">Medicine Name *</label>
+                        <input type="text" id="medicine-name" name="medicine-name" placeholder="Enter medicine name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="medicine-price">Price (₹) *</label>
+                        <input type="number" id="medicine-price" name="medicine-price" step="0.01" placeholder="Enter price" min="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="manufacturer">Manufacturer</label>
+                        <input type="text" id="manufacturer" name="manufacturer" placeholder="Enter manufacturer name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <input type="text" id="category" name="category" placeholder="e.g., Antibiotic, Painkiller">
+                        </div>
+                        <div class="form-group">
+                            <label for="minimum-stock">Minimum Stock</label>
+                            <input type="number" id="minimum-stock" name="minimum-stock" placeholder="Default: 10" min="1">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-button">➕ Add Medicine</button>
+                </form>
+            </div>
+
+            <!-- BATCH FORM (Auto‑assign location) -->
+            <div class="form-container" style="margin-top: 30px;">
+                <h3>Add Batch to Existing Medicine</h3>
+                <form id="addBatchForm">
+                    <div class="form-group">
+                        <label for="batch-medicine">Medicine *</label>
+                        <input type="text" id="batch-medicine" name="batch-medicine" placeholder="Search medicine..." required autocomplete="off">
+                        <div id="medicine-dropdown" class="autocomplete-dropdown"></div>
+                        <input type="hidden" id="selected-medicine-id" name="selected-medicine-id">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="batch-number">Batch Number *</label>
+                        <input type="text" id="batch-number" name="batch-number" placeholder="Enter batch number" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="batch-quantity">Quantity *</label>
+                            <input type="number" id="batch-quantity" name="batch-quantity" placeholder="Enter quantity" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="batch-price">Price (₹) *</label>
+                            <input type="number" id="batch-price" name="batch-price" step="0.01" placeholder="Enter price" min="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expiry-date">Expiry Date *</label>
+                        <input type="date" id="expiry-date" name="expiry-date" required>
+                    </div>
+
+                    <!-- Location is automatically assigned – no dropdown -->
+
+                    <button type="submit" class="submit-button">➕ Add Batch</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ensure user is authenticated
+        requireAuth();
+
+        // Helper to get a free location (returns location object or null)
+        async function getFreeLocation() {
+            try {
+                const locations = await apiCall('/locations/free');
+                // The backend returns an array directly
+                if (Array.isArray(locations) && locations.length > 0) {
+                    return locations[0]; // take the first free location
+                }
+                return null;
+            } catch (error) {
+                console.error('Error fetching free locations:', error);
+                return null;
+            }
+        }
+
+        // Medicine form submission
+        document.getElementById('addMedicineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const medicineName = document.getElementById('medicine-name').value.trim();
+            const price = parseFloat(document.getElementById('medicine-price').value);
+            const manufacturer = document.getElementById('manufacturer').value.trim();
+            const category = document.getElementById('category').value.trim();
+            const minStock = parseInt(document.getElementById('minimum-stock').value) || 10;
+
+            if (!medicineName || !price) {
+                showNotification('Please fill medicine name and price', 'error');
+                return;
+            }
+
+            const submitBtn = e.target.querySelector('.submit-button');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding...';
+
+            try {
+                const data = await apiCall('/medicines', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: medicineName,
+                        price: price,
+                        minimumStock: minStock,
+                        category: category || 'General',
+                        manufacturer: manufacturer || 'Unknown'
+                    })
+                });
+
+                if (data.success) {
+                    showNotification(`✅ Medicine "${data.medicine.name}" added successfully!`, 'success');
+                    document.getElementById('addMedicineForm').reset();
+                } else {
+                    throw new Error(data.message || 'Failed to add medicine');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '➕ Add Medicine';
+            }
+        });
+
+        // Batch form submission – now auto‑assigns location
+        document.getElementById('addBatchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const medicineId = document.getElementById('selected-medicine-id').value;
+            const batchNumber = document.getElementById('batch-number').value.trim();
+            const quantity = parseInt(document.getElementById('batch-quantity').value);
+            const price = parseFloat(document.getElementById('batch-price').value);
+            const expiryDate = document.getElementById('expiry-date').value;
+
+            if (!medicineId) {
+                showNotification('Please select a medicine', 'error');
+                return;
+            }
+            if (!batchNumber || !quantity || !price || !expiryDate) {
+                showNotification('Please fill all batch fields', 'error');
+                return;
+            }
+
+            // Get a free location automatically
+            const freeLocation = await getFreeLocation();
+            if (!freeLocation) {
+                showNotification('No free storage locations available', 'error');
+                return;
+            }
+
+            const submitBtn = e.target.querySelector('.submit-button');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding...';
+
+            try {
+                const data = await apiCall('/batches', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        medicineId: medicineId,
+                        batchNumber: batchNumber,
+                        quantity: quantity,
+                        price: price,
+                        expiryDate: expiryDate,
+                        location: freeLocation.code   // auto‑assigned location
+                    })
+                });
+
+                if (data.success) {
+                    showNotification(`✅ Batch added successfully! Location: ${freeLocation.code}`, 'success');
+                    document.getElementById('addBatchForm').reset();
+                    document.getElementById('selected-medicine-id').value = ''; // clear hidden
+                } else {
+                    throw new Error(data.message || 'Failed to add batch');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '➕ Add Batch';
+            }
+        });
+
+        // Medicine search autocomplete for batch form
+        const medicineSearch = document.getElementById('batch-medicine');
+        const dropdown = document.getElementById('medicine-dropdown');
+        let searchTimeout;
+
+        medicineSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            if (query.length < 2) {
+                dropdown.innerHTML = '';
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const medicines = await apiCall(`/medicines/search?q=${encodeURIComponent(query)}`);
+                    if (medicines && medicines.length > 0) {
+                        dropdown.innerHTML = medicines.map(med => `
+                            <div class="autocomplete-item" data-id="${med._id}" data-name="${med.name}">
+                                <strong>${med.name}</strong> <small>₹${med.price}</small>
+                            </div>
+                        `).join('');
+                        dropdown.style.display = 'block';
+                    } else {
+                        dropdown.innerHTML = '<div class="autocomplete-item">No medicines found</div>';
+                        dropdown.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                }
+            }, 300);
+        });
+
+        dropdown.addEventListener('click', (e) => {
+            const item = e.target.closest('.autocomplete-item');
+            if (item && item.dataset.id) {
+                medicineSearch.value = item.dataset.name;
+                document.getElementById('selected-medicine-id').value = item.dataset.id;
+                dropdown.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!medicineSearch.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

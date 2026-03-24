@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaEasy - Login / Sign Up</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <script src="js/api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER with logo + PharmaEasy on left, Sign Up / Sign In on right -->
+        <header>
+            <div class="logo-area">
+                <div class="logo-icon">💊</div>
+                <span class="logo-text">PharmaEasy</span>
+            </div>
+            <nav>
+                <a href="#" class="btn btn-outline" id="showSignupBtn">Sign Up</a>
+                <a href="#" class="btn btn-primary" id="showLoginBtn">Sign In</a>
+            </nav>
+        </header>
+
+        <!-- TWO COLUMN LAYOUT: FORMS LEFT + IMAGE RIGHT -->
+        <div class="login-container">
+            <!-- LOGIN FORM (visible by default) -->
+            <div class="login-form" id="loginForm">
+                <h2>PharmEasy</h2>
+                <p>Pharmacy Management System</p>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn-login">Login</button>
+                    <div class="signup-text">
+                        Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- SIGNUP FORM (hidden initially) -->
+            <div class="login-form" id="signupForm" style="display: none;">
+                <h2>Create Account</h2>
+                <p>Join PharmaEasy today</p>
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="signupName" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" placeholder="Enter your password (min 6 characters)" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn-login">Sign Up</button>
+                    <div class="signup-text">
+                        Already have an account? <a href="#" id="switchToLogin">Sign in</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- RIGHT COLUMN – YOUR IMAGE -->
+            <div class="login-image">
+                <img src="image1.png" alt="Pharmacy">
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <p>© 2024 PharmaEasy. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const loginFormElement = document.getElementById('loginFormElement');
+            const signupFormElement = document.getElementById('signupFormElement');
+            const showSignupBtn = document.getElementById('showSignupBtn');
+            const showLoginBtn = document.getElementById('showLoginBtn');
+            const switchToSignup = document.getElementById('switchToSignup');
+            const switchToLogin = document.getElementById('switchToLogin');
+
+            // Inputs
+            const loginEmail = document.getElementById('loginEmail');
+            const loginPassword = document.getElementById('loginPassword');
+            const signupName = document.getElementById('signupName');
+            const signupEmail = document.getElementById('signupEmail');
+            const signupPassword = document.getElementById('signupPassword');
+
+            // Toggle functions
+            function showLogin() {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+            }
+            function showSignup() {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+            }
+
+            // Toggle event listeners
+            if (showSignupBtn) showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
+            if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+            if (switchToSignup) switchToSignup.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
+            if (switchToLogin) switchToLogin.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+
+            // Helper validation
+            function validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+
+            // Handle login
+            loginFormElement.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = loginEmail.value.trim();
+                const password = loginPassword.value;
+
+                if (!email || !password) {
+                    showNotification('Please enter email and password', 'error');
+                    return;
+                }
+                if (!validateEmail(email)) {
+                    showNotification('Please enter a valid email address', 'error');
+                    return;
+                }
+                if (password.length < 6) {
+                    showNotification('Password must be at least 6 characters', 'error');
+                    return;
+                }
+
+                const submitBtn = loginFormElement.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Logging in...';
+
+                try {
+                    const response = await apiCall('/login', {
+                        method: 'POST',
+                        body: JSON.stringify({ email, password })
+                    });
+                    if (response.success && response.token) {
+                        setToken(response.token);
+                        showNotification('Login successful! Redirecting...', 'success');
+                        setTimeout(() => window.location.href = '/dashboard.html', 1000);
+                    } else {
+                        showNotification('Login failed. Please try again.', 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Login';
+                    }
+                } catch (error) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                    // apiCall already shows notifications
+                }
+            });
+
+            // Handle signup
+            signupFormElement.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = signupName.value.trim();
+                const email = signupEmail.value.trim();
+                const password = signupPassword.value;
+
+                if (!name || !email || !password) {
+                    showNotification('Please fill all fields', 'error');
+                    return;
+                }
+                if (!validateEmail(email)) {
+                    showNotification('Please enter a valid email address', 'error');
+                    return;
+                }
+                if (password.length < 6) {
+                    showNotification('Password must be at least 6 characters', 'error');
+                    return;
+                }
+
+                const submitBtn = signupFormElement.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating account...';
+
+                try {
+                    const response = await apiCall('/signup', {
+                        method: 'POST',
+                        body: JSON.stringify({ name, email, password })
+                    });
+                    if (response.success) {
+                        showNotification('Account created successfully! Please log in.', 'success');
+                        signupFormElement.reset();
+                        setTimeout(() => {
+                            showLogin();
+                            loginEmail.value = email;
+                        }, 1500);
+                    } else {
+                        showNotification(response.message || 'Signup failed', 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Sign Up';
+                    }
+                } catch (error) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign Up';
+                    // apiCall shows notification
+                }
+            });
+
+            // Optional: redirect if already logged in
+            //if (isAuthenticated()) {
+           //     window.location.href = '/dashboard.html';
+           // }
+        });
+    </script>
+</body>
+</html>
