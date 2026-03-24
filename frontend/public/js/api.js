@@ -3,7 +3,7 @@
  * Handles all API communication with automatic token injection and error handling
  */
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://pharmaeasy-backend-5ht5.onrender.com/api';
 
 /**
  * Display notification to user
