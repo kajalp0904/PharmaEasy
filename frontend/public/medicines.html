@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Om Medical - All Medicines</title>
+    <link rel="stylesheet" href="css/medicines.css">
+    <script src="js/api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h1>Om Medical</h1>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="medicines.html" class="nav-item active">All Medicines</a>
+                <a href="add-medicine.html" class="nav-item">Add Medicine</a>
+                <a href="generate-bill.html" class="nav-item">Generate Bill</a>
+                <a href="billing-history.html" class="nav-item">Billing History</a>
+                <a href="alerts.html" class="nav-item">Low Stock</a>
+                <a href="alerts.html" class="nav-item">Expiry Alerts</a>
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h2>All Medicines</h2>
+                <a href="add-medicine.html" class="btn-primary">➕ Add Medicine</a>
+            </div>
+
+            <!-- STATS -->
+            <div class="stats-row" id="statsRow" style="display:none;">
+                <div class="stat-card">
+                    <span class="stat-label">Total Medicines</span>
+                    <span class="stat-value" id="statTotal">—</span>
+                </div>
+                <div class="stat-card good">
+                    <span class="stat-label">Sufficient Stock</span>
+                    <span class="stat-value" id="statGood">—</span>
+                </div>
+                <div class="stat-card low">
+                    <span class="stat-label">Low Stock</span>
+                    <span class="stat-value" id="statLow">—</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Categories</span>
+                    <span class="stat-value" id="statCats">—</span>
+                </div>
+            </div>
+
+            <!-- FILTER BAR -->
+            <div class="filter-bar" id="filterBar" style="display:none;">
+                <input type="text" id="searchInput" placeholder="🔍 Search by name or manufacturer...">
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="stockFilter">
+                    <option value="">In Stock Only (default)</option>
+                    <option value="good">✅ Sufficient Stock</option>
+                    <option value="low">⚠️ Low Stock</option>
+                    <option value="all">📋 Show All (incl. 0 stock)</option>
+                </select>
+                <span class="filter-count" id="filterCount"></span>
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-wrapper" id="tableWrapper" style="display:none;">
+                <table class="medicines-table" id="medicinesTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('name')"      data-col="name">Medicine Name ↕</th>
+                            <th onclick="sortTable('category')"  data-col="category">Category ↕</th>
+                            <th onclick="sortTable('price')"     data-col="price">Price ↕</th>
+                            <th onclick="sortTable('totalStock')"data-col="totalStock">Total Stock ↕</th>
+                            <th>Min Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicinesBody">
+                        <tr class="loading-row">
+                            <td colspan="6">⏳ Loading medicines...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- EMPTY STATE -->
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <span class="empty-state-icon">💊</span>
+                <div class="empty-state-title">No medicines found</div>
+                <div class="empty-state-text" id="emptyMessage">No medicines added yet. Add your first medicine to get started.</div>
+                <a href="add-medicine.html" class="btn-primary" id="emptyBtn">➕ Add Medicine</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== AUTH CHECK ==========
+        requireAuth();
+
+        // ========== STATE ==========
+        let allMedicines = [];
+        let sortCol = 'name';
+        let sortAsc = true;
+
+        // ========== LOAD MEDICINES ==========
+        async function loadMedicines() {
+            try {
+                const data = await apiCall('/medicines');
+
+                // apiCall returns the array directly for this route
+                if (!Array.isArray(data)) {
+                    throw new Error('Unexpected response format');
+                }
+
+                allMedicines = data;
+                renderStats(allMedicines);
+                populateCategoryFilter(allMedicines);
+                applyFilters();
+
+                document.getElementById('statsRow').style.display = 'flex';
+                document.getElementById('filterBar').style.display = 'flex';
+
+            } catch (err) {
+                console.error('Failed to load medicines:', err);
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('emptyMessage').textContent = 'Could not load medicines. Please check your connection and try again.';
+                document.getElementById('emptyBtn').style.display = 'none';
+            }
+        }
+
+        // ========== RENDER STATS ==========
+        function renderStats(medicines) {
+            // Stats based only on medicines that have stock
+            const withStock = medicines.filter(m => (m.totalStock || 0) > 0);
+            const lowCount  = withStock.filter(m => m.totalStock < m.minimumStock).length;
+            const goodCount = withStock.length - lowCount;
+            const cats      = new Set(withStock.map(m => m.category || 'General')).size;
+
+            document.getElementById('statTotal').textContent = withStock.length;
+            document.getElementById('statGood').textContent  = goodCount;
+            document.getElementById('statLow').textContent   = lowCount;
+            document.getElementById('statCats').textContent  = cats;
+        }
+
+        // ========== POPULATE CATEGORY DROPDOWN ==========
+        function populateCategoryFilter(medicines) {
+            const cats = [...new Set(medicines.map(m => m.category || 'General').filter(Boolean))].sort();
+            const sel  = document.getElementById('categoryFilter');
+            cats.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                sel.appendChild(opt);
+            });
+        }
+
+        // ========== APPLY FILTERS ==========
+        function applyFilters() {
+            const search   = document.getElementById('searchInput').value.trim().toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const stock    = document.getElementById('stockFilter').value;
+
+            let filtered = allMedicines.filter(m => {
+                // By default (and for good/low), hide zero-stock medicines
+                // Only show them when 'all' is explicitly selected
+                if (stock !== 'all' && (m.totalStock || 0) === 0) return false;
+
+                const matchSearch = !search ||
+                    (m.name || '').toLowerCase().includes(search) ||
+                    (m.manufacturer || '').toLowerCase().includes(search);
+
+                const matchCat = !category || (m.category || 'General') === category;
+
+                const isLow = m.totalStock < m.minimumStock;
+                const matchStock = (stock === '' || stock === 'all') ? true :
+                    (stock === 'low'  && isLow) ||
+                    (stock === 'good' && !isLow);
+
+                return matchSearch && matchCat && matchStock;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                let av = a[sortCol] ?? '';
+                let bv = b[sortCol] ?? '';
+                if (typeof av === 'string') av = av.toLowerCase();
+                if (typeof bv === 'string') bv = bv.toLowerCase();
+                if (av < bv) return sortAsc ? -1 : 1;
+                if (av > bv) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            renderTable(filtered);
+
+            const zeroCount = allMedicines.filter(m => (m.totalStock || 0) === 0).length;
+            const baseMsg = `${filtered.length} of ${allMedicines.length} medicines`;
+            const zeroNote = (stock !== 'all' && zeroCount > 0)
+                ? ` (${zeroCount} with 0 stock hidden)`
+                : '';
+            document.getElementById('filterCount').textContent =
+                filtered.length === allMedicines.length
+                    ? `${allMedicines.length} medicines${zeroNote}`
+                    : `${baseMsg}${zeroNote}`;
+        }
+
+        // ========== RENDER TABLE ==========
+        function renderTable(medicines) {
+            const tbody = document.getElementById('medicinesBody');
+            const tableWrapper = document.getElementById('tableWrapper');
+            const emptyState   = document.getElementById('emptyState');
+
+            if (medicines.length === 0) {
+                tableWrapper.style.display = 'none';
+                emptyState.style.display = 'block';
+                const hasFilter = document.getElementById('searchInput').value ||
+                    document.getElementById('categoryFilter').value ||
+                    document.getElementById('stockFilter').value;
+                document.getElementById('emptyMessage').textContent = hasFilter
+                    ? 'No medicines match your current filters. Try clearing the filters.'
+                    : 'No medicines added yet.';
+                document.getElementById('emptyBtn').style.display = hasFilter ? 'none' : 'inline-block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            tableWrapper.style.display = 'block';
+
+            tbody.innerHTML = medicines.map(m => {
+                const isLow = m.totalStock < m.minimumStock;
+                const statusBadge = isLow
+                    ? '<span class="badge badge-low">⚠️ Low Stock</span>'
+                    : '<span class="badge badge-good">✅ Good</span>';
+                const catBadge = `<span class="badge badge-cat">${m.category || 'General'}</span>`;
+                const manufacturer = m.manufacturer
+                    ? `<div class="medicine-manufacturer">${m.manufacturer}</div>` : '';
+
+                return `<tr>
+                    <td>
+                        <div class="medicine-name">${m.name}</div>
+                        ${manufacturer}
+                    </td>
+                    <td>${catBadge}</td>
+                    <td>₹${(m.price || 0).toFixed(2)}</td>
+                    <td><strong>${m.totalStock || 0}</strong></td>
+                    <td>${m.minimumStock || 10}</td>
+                    <td>${statusBadge}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ========== SORT ==========
+        function sortTable(col) {
+            if (sortCol === col) {
+                sortAsc = !sortAsc;
+            } else {
+                sortCol = col;
+                sortAsc = true;
+            }
+            // Update header arrows
+            document.querySelectorAll('.medicines-table th[data-col]').forEach(th => {
+                const c = th.dataset.col;
+                th.textContent = th.textContent.replace(/ [↑↓↕]$/, '');
+                if (c === sortCol) th.textContent += sortAsc ? ' ↑' : ' ↓';
+                else th.textContent += ' ↕';
+            });
+            applyFilters();
+        }
+
+        // ========== EVENT LISTENERS ==========
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+        document.getElementById('stockFilter').addEventListener('change', applyFilters);
+
+        // ========== INIT ==========
+        window.addEventListener('DOMContentLoaded', loadMedicines);
+    </script>
+</body>
+</html>

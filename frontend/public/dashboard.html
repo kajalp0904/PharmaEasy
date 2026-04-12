@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmEasy - Dashboard</title>
+    <title>Om Medical - Dashboard</title>
     <link rel="stylesheet" href="css/dashboard.css">
 </head>
+
 <body>
     <script src="js/api.js"></script>
     <div class="container">
-        <!-- SIDEBAR (DARK) -->
+
         <div class="sidebar">
             <div class="sidebar-logo">
-                <h1>PharmEasy</h1>
+                <h1>Om Medical</h1>
             </div>
             <nav>
                 <a href="dashboard.html" class="nav-item active">Dashboard</a>
-                <a href="add-medicine.html" class="nav-item">Add Medicine</a>
+                <a href="medicines.html" class="nav-item">All Medicines</a>
+                <a href="add-medicine.html?v=2" class="nav-item">Add Medicine</a>
                 <a href="generate-bill.html" class="nav-item">Generate Bill</a>
                 <a href="billing-history.html" class="nav-item">Billing History</a>
                 <a href="alerts.html" class="nav-item">Low Stock</a>
                 <a href="alerts.html" class="nav-item">Expiry Alerts</a>
-               <!-- <a href="#" class="nav-item">Restock</a>-->
+                <!-- <a href="#" class="nav-item">Restock</a>-->
             </nav>
         </div>
 
@@ -32,14 +35,44 @@
                 <button id="logoutBtn" class="logout-btn" onclick="logout()">Logout</button>
             </div>
 
+            <!-- ===== LIVE STATS CARDS ===== -->
+            <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
+                <div onclick="location.href='medicines.html'"
+                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
+                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                    <span style="font-size:13px; color:#7a7a7a;">Total Medicines</span>
+                    <span id="statMedicines" style="font-size:28px; font-weight:700; color:#2d2d2d;">—</span>
+                </div>
+                <div onclick="location.href='alerts.html'"
+                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
+                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                    <span style="font-size:13px; color:#7a7a7a;">Low Stock Alerts</span>
+                    <span id="statLowStock" style="font-size:28px; font-weight:700; color:#c62828;">—</span>
+                </div>
+                <div onclick="location.href='alerts.html'"
+                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
+                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                    <span style="font-size:13px; color:#7a7a7a;">Expiring Soon</span>
+                    <span id="statExpiring" style="font-size:28px; font-weight:700; color:#e65100;">—</span>
+                </div>
+                <div onclick="location.href='billing-history.html'"
+                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
+                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                    <span style="font-size:13px; color:#7a7a7a;">Today's Bills</span>
+                    <span id="statBills" style="font-size:28px; font-weight:700; color:#2e7d32;">—</span>
+                </div>
+            </div>
+
             <!-- ===== LIVE MEDICINE SEARCH WITH AUTOCOMPLETE ===== -->
+
             <div class="search-section">
                 <div class="search-title">
                     <span>🔍</span> Search Medicine
                 </div>
                 <div class="search-bar">
                     <div class="search-wrapper">
-                        <input type="text" id="medicineSearchInput" class="search-input" placeholder="Type medicine name..." autocomplete="off">
+                        <input type="text" id="medicineSearchInput" class="search-input"
+                            placeholder="Type medicine name..." autocomplete="off">
                         <div id="suggestionsDropdown" class="suggestions-dropdown"></div>
                     </div>
                     <button id="searchBtn" class="search-btn">
@@ -90,7 +123,7 @@
             </div>
 
             <!-- RECENT MEDICINES – EMPTY STATE (no medicines added yet) -->
-            <h2 class="section-title">PharmEasy</h2>
+            <h2 class="section-title">Om Medical</h2>
             <div class="empty-state">
                 <div class="empty-state-icon">💊</div>
                 <div class="empty-state-title"></div>
@@ -134,14 +167,14 @@
         // ========== DISPLAY SUGGESTIONS DROPDOWN ==========
         async function showSuggestions() {
             const query = searchInput.value.trim();
-            
+
             if (query.length < 2) {
                 suggestionsDropdown.classList.remove('active');
                 return;
             }
 
             const medicines = await fetchMedicineSuggestions(query);
-            
+
             if (medicines.length === 0) {
                 suggestionsDropdown.classList.remove('active');
                 return;
@@ -159,20 +192,20 @@
         }
 
         // ========== DEBOUNCED INPUT HANDLER ==========
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(showSuggestions, 300);
         });
 
         // ========== HIDE SUGGESTIONS WHEN CLICKING OUTSIDE ==========
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!searchInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
                 suggestionsDropdown.classList.remove('active');
             }
         });
 
         // ========== SELECT A MEDICINE FROM SUGGESTIONS ==========
-        window.selectMedicine = function(medicineId, medicineName) {
+        window.selectMedicine = function (medicineId, medicineName) {
             searchInput.value = medicineName;
             selectedMedicineId = medicineId;
             suggestionsDropdown.classList.remove('active');
@@ -190,10 +223,9 @@
             if (selectedMedicineId) {
                 performSearch(selectedMedicineId, query);
             } else {
-                fetch(`${API_BASE}/medicines/search?q=${encodeURIComponent(query)}`)
-                    .then(res => res.json())
+                apiCall(`/medicines/search?q=${encodeURIComponent(query)}`)
                     .then(medicines => {
-                        if (medicines.length > 0) {
+                        if (medicines && medicines.length > 0) {
                             const med = medicines[0];
                             selectedMedicineId = med._id;
                             performSearch(med._id, med.name);
@@ -220,19 +252,17 @@
             searchResults.classList.remove('active');
 
             try {
-                const medRes = await fetch(`${API_BASE}/medicines/${medicineId}`);
-                const medicine = await medRes.json();
-                
-                if (!medicine) {
+                const medicine = await apiCall(`/medicines/${medicineId}`);
+
+                if (!medicine || medicine.error) {
                     throw new Error('Medicine not found');
                 }
 
-                const batchRes = await fetch(`${API_BASE}/batches?medicine=${medicineId}`);
-                const batchData = await batchRes.json();
-                const batches = batchData.success ? batchData.batches : [];
+                const batchData = await apiCall(`/batches?medicine=${medicineId}`);
+                const batches = batchData && batchData.success ? batchData.batches : [];
 
                 displayMedicineDetails(medicine, batches);
-                
+
             } catch (error) {
                 console.error('Error fetching details:', error);
                 searchResults.innerHTML = `
@@ -251,7 +281,7 @@
         function displayMedicineDetails(medicine, batches) {
             // Filter out batches with quantity 0
             const activeBatches = batches.filter(batch => batch.quantity > 0);
-            
+
             const totalStock = medicine.totalStock || 0;
             const minStock = medicine.minimumStock || 0;
             const price = medicine.price || 0;
@@ -301,10 +331,10 @@
                 activeBatches.forEach(batch => {
                     const expiryDate = new Date(batch.expiryDate);
                     const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-                    
+
                     let expiryClass = 'expiry-good';
                     let expiryText = `${daysLeft} days`;
-                    
+
                     if (daysLeft <= 0) {
                         expiryClass = 'expiry-danger';
                         expiryText = `Expired`;
@@ -376,16 +406,46 @@
 
         // ========== EVENT LISTENERS ==========
         searchBtn.addEventListener('click', searchMedicine);
-        searchInput.addEventListener('keypress', function(e) {
+        searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 searchMedicine();
             }
         });
 
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             selectedMedicineId = null;
         });
+
+        // ========== DASHBOARD STATS ==========
+        async function loadDashboardStats() {
+            try {
+                const data = await apiCall('/dashboard');
+                if (!data || !data.summary) return;
+
+                const s = data.summary;
+
+                document.getElementById('statMedicines').textContent = s.totalMedicines ?? '0';
+                document.getElementById('statLowStock').textContent = s.lowStockAlerts ?? '0';
+                document.getElementById('statExpiring').textContent = s.expiringSoon ?? '0';
+                document.getElementById('statBills').textContent = s.todayTransactions ?? '0';
+
+                // Highlight warning cards if values are > 0
+                if ((s.lowStockAlerts ?? 0) > 0) {
+                    document.querySelector('.stat-warning').classList.add('stat-active');
+                }
+                if ((s.expiringSoon ?? 0) > 0) {
+                    document.querySelector('.stat-danger').classList.add('stat-active');
+                }
+            } catch (e) {
+                // Fail silently — stats are informational only
+            }
+        }
+
+        // Load stats on page load
+        window.addEventListener('DOMContentLoaded', loadDashboardStats);
     </script>
+
 </body>
+
 </html>

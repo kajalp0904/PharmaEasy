@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmEasy - Add Medicine</title>
+    <title>Om Medical - Add Medicine</title>
     <link rel="stylesheet" href="css/add-medicine.css">
     <script src="js/api.js"></script>
 </head>
@@ -12,10 +12,11 @@
         <!-- SIDEBAR (DARK) -->
         <div class="sidebar">
             <div class="sidebar-logo">
-                <h1>PharmEasy</h1>
+                <h1>Om Medical</h1>
             </div>
             <nav>
                 <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="medicines.html" class="nav-item">All Medicines</a>
                 <a href="add-medicine.html" class="nav-item active">Add Medicine</a>
                 <a href="generate-bill.html" class="nav-item">Generate Bill</a>
                 <a href="billing-history.html" class="nav-item">Billing History</a>
@@ -59,6 +60,22 @@
                             <label for="minimum-stock">Minimum Stock</label>
                             <input type="number" id="minimum-stock" name="minimum-stock" placeholder="Default: 10" min="1">
                         </div>
+                    </div>
+
+                    <h4 style="margin: 15px 0 10px 0; color: #444; border-bottom: 1px solid #eee; padding-bottom: 5px;">Initial Stock (Optional)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="initial-quantity">Quantity</label>
+                            <input type="number" id="initial-quantity" name="initial-quantity" placeholder="e.g., 50" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="initial-batch">Batch Number</label>
+                            <input type="text" id="initial-batch" name="initial-batch" placeholder="e.g., BATCH-001">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="initial-expiry">Expiry Date</label>
+                        <input type="date" id="initial-expiry" name="initial-expiry">
                     </div>
 
                     <button type="submit" class="submit-button">➕ Add Medicine</button>
@@ -109,13 +126,21 @@
         // Ensure user is authenticated
         requireAuth();
 
-        // Helper to get a free location (returns location object or null)
+        // Helper to get a free location — auto-initializes if none exist
         async function getFreeLocation() {
             try {
-                const locations = await apiCall('/locations/free');
-                // The backend returns an array directly
+                let locations = await apiCall('/locations/free');
+
+                // If no locations at all, auto-initialize 100 locations
+                if (!Array.isArray(locations) || locations.length === 0) {
+                    showNotification('⚙️ Setting up storage locations...', 'info');
+                    await apiCall('/init-locations', { method: 'POST' });
+                    // Retry after init
+                    locations = await apiCall('/locations/free');
+                }
+
                 if (Array.isArray(locations) && locations.length > 0) {
-                    return locations[0]; // take the first free location
+                    return locations[0];
                 }
                 return null;
             } catch (error) {
@@ -133,9 +158,19 @@
             const manufacturer = document.getElementById('manufacturer').value.trim();
             const category = document.getElementById('category').value.trim();
             const minStock = parseInt(document.getElementById('minimum-stock').value) || 10;
+            const initialQuantity = document.getElementById('initial-quantity').value;
+            const initialBatch = document.getElementById('initial-batch').value;
+            const initialExpiry = document.getElementById('initial-expiry').value;
 
             if (!medicineName || !price) {
                 showNotification('Please fill medicine name and price', 'error');
+                return;
+            }
+
+            // Validate that if any initial stock field is filled, all must be filled
+            const hasAnyInitial = initialQuantity || initialBatch || initialExpiry;
+            if (hasAnyInitial && (!initialQuantity || !initialBatch || !initialExpiry)) {
+                showNotification('Please fill all three fields (Quantity, Batch Number, Expiry Date) to add initial stock.', 'error');
                 return;
             }
 
@@ -144,19 +179,31 @@
             submitBtn.textContent = 'Adding...';
 
             try {
+                const payload = {
+                    name: medicineName,
+                    price: price,
+                    minimumStock: minStock,
+                    category: category || 'General',
+                    manufacturer: manufacturer || 'Unknown'
+                };
+
+                if (initialQuantity && initialBatch && initialExpiry) {
+                    payload.initialQuantity = initialQuantity;
+                    payload.initialBatchNumber = initialBatch;
+                    payload.initialExpiryDate = initialExpiry;
+                }
+
                 const data = await apiCall('/medicines', {
                     method: 'POST',
-                    body: JSON.stringify({
-                        name: medicineName,
-                        price: price,
-                        minimumStock: minStock,
-                        category: category || 'General',
-                        manufacturer: manufacturer || 'Unknown'
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 if (data.success) {
-                    showNotification(`✅ Medicine "${data.medicine.name}" added successfully!`, 'success');
+                    let msg = `✅ Medicine "${data.medicine.name}" added successfully!`;
+                    if (data.medicine.totalStock > 0) {
+                        msg += ` Initial stock: ${data.medicine.totalStock}.`;
+                    }
+                    showNotification(msg, 'success');
                     document.getElementById('addMedicineForm').reset();
                 } else {
                     throw new Error(data.message || 'Failed to add medicine');
@@ -169,29 +216,35 @@
             }
         });
 
-        // Batch form submission – now auto‑assigns location
+        // Batch form submission — location auto-assigned by backend
         document.getElementById('addBatchForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const medicineId = document.getElementById('selected-medicine-id').value;
+            let medicineId = document.getElementById('selected-medicine-id').value;
+            const medicineSearchName = document.getElementById('batch-medicine').value.trim();
             const batchNumber = document.getElementById('batch-number').value.trim();
             const quantity = parseInt(document.getElementById('batch-quantity').value);
             const price = parseFloat(document.getElementById('batch-price').value);
             const expiryDate = document.getElementById('expiry-date').value;
 
+            // Auto-fallback: if they typed a name but forgot to click the dropdown list
+            if (!medicineId && medicineSearchName) {
+                try {
+                    const searchRes = await apiCall(`/medicines/search?q=${encodeURIComponent(medicineSearchName)}`);
+                    const match = searchRes.find(m => m.name.toLowerCase() === medicineSearchName.toLowerCase());
+                    if (match) {
+                        medicineId = match._id;
+                        document.getElementById('selected-medicine-id').value = medicineId;
+                    }
+                } catch(e) {}
+            }
+
             if (!medicineId) {
-                showNotification('Please select a medicine', 'error');
+                showNotification('Could not find that medicine. Please select a medicine exactly from the dropdown list', 'error');
                 return;
             }
             if (!batchNumber || !quantity || !price || !expiryDate) {
                 showNotification('Please fill all batch fields', 'error');
-                return;
-            }
-
-            // Get a free location automatically
-            const freeLocation = await getFreeLocation();
-            if (!freeLocation) {
-                showNotification('No free storage locations available', 'error');
                 return;
             }
 
@@ -203,21 +256,21 @@
                 const data = await apiCall('/batches', {
                     method: 'POST',
                     body: JSON.stringify({
-                        medicineId: medicineId,
-                        batchNumber: batchNumber,
-                        quantity: quantity,
-                        price: price,
-                        expiryDate: expiryDate,
-                        location: freeLocation.code   // auto‑assigned location
+                        medicineId,
+                        batchNumber,
+                        quantity,
+                        price,
+                        expiryDate
+                        // No location sent — backend auto-assigns one
                     })
                 });
 
                 if (data.success) {
-                    showNotification(`✅ Batch added successfully! Location: ${freeLocation.code}`, 'success');
+                    showNotification(`✅ Batch added! Location: ${data.data?.location || 'Auto'} | New stock: ${data.data?.newStock ?? '?'}`, 'success');
                     document.getElementById('addBatchForm').reset();
-                    document.getElementById('selected-medicine-id').value = ''; // clear hidden
+                    document.getElementById('selected-medicine-id').value = '';
                 } else {
-                    throw new Error(data.message || 'Failed to add batch');
+                    throw new Error(data.message || data.error || 'Failed to add batch');
                 }
             } catch (error) {
                 showNotification(error.message, 'error');
@@ -226,6 +279,7 @@
                 submitBtn.textContent = '➕ Add Batch';
             }
         });
+
 
         // Medicine search autocomplete for batch form
         const medicineSearch = document.getElementById('batch-medicine');

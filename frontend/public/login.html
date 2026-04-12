@@ -3,221 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmaEasy - Login / Sign Up</title>
+    <title>Om Medical - Admin Login</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
     <script src="js/api.js"></script>
+    <style>
+        .helper-link {
+            color: #ff6b35; 
+            font-size: 14px; 
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .helper-link:hover {
+            color: #e65c2b;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- HEADER with logo + PharmaEasy on left, Sign Up / Sign In on right -->
         <header>
             <div class="logo-area">
                 <div class="logo-icon">💊</div>
-                <span class="logo-text">PharmaEasy</span>
+                <span class="logo-text">Om Medical</span>
             </div>
-            <nav>
-                <a href="#" class="btn btn-outline" id="showSignupBtn">Sign Up</a>
-                <a href="#" class="btn btn-primary" id="showLoginBtn">Sign In</a>
-            </nav>
         </header>
 
-        <!-- TWO COLUMN LAYOUT: FORMS LEFT + IMAGE RIGHT -->
         <div class="login-container">
-            <!-- LOGIN FORM (visible by default) -->
-            <div class="login-form" id="loginForm">
-                <h2>PharmEasy</h2>
+            <!-- LOGIN FORM -->
+            <div class="login-form" id="loginFormContainer">
+                <h2>Om Medical</h2>
                 <p>Pharmacy Management System</p>
                 <form id="loginFormElement">
                     <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                        <label>Username</label>
+                        <input type="text" id="loginEmail" placeholder="Enter your username or email" required autocomplete="username">
                     </div>
                     <div class="form-group">
                         <label>Password</label>
-                        <input type="password" id="loginPassword" placeholder="Enter your password" required minlength="6">
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required minlength="6" autocomplete="current-password">
                     </div>
-                    <button type="submit" class="btn-login">Login</button>
-                    <div class="signup-text">
-                        Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+                    <!-- Forgot Password Link -->
+                    <div style="text-align: right; margin-top: -10px; margin-bottom: 15px;">
+                        <a href="#" id="forgotPasswordLink" class="helper-link">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn-login" id="loginBtn">Login</button>
+                </form>
+            </div>
+
+            <!-- FORGOT PASSWORD (SEND OTP) -->
+            <div class="login-form" id="forgotFormContainer" style="display: none;">
+                <h2>Reset Password</h2>
+                <p>Enter your registered email below to receive an OTP.</p>
+                <form id="forgotFormElement">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="text" id="forgotEmail" placeholder="Enter your email" required>
+                    </div>
+                    <button type="submit" class="btn-login" id="forgotBtn">Send OTP</button>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="#" id="backToLoginLink" style="color: #7a7a7a; font-size: 14px; text-decoration: none;">&larr; Back to Login</a>
                     </div>
                 </form>
             </div>
 
-            <!-- SIGNUP FORM (hidden initially) -->
-            <div class="login-form" id="signupForm" style="display: none;">
-                <h2>Create Account</h2>
-                <p>Join PharmaEasy today</p>
-                <form id="signupFormElement">
+            <!-- RESET PASSWORD (VERIFY OTP) -->
+            <div class="login-form" id="resetFormContainer" style="display: none;">
+                <h2>Verify OTP</h2>
+                <p>An OTP has been sent to your email.</p>
+                <form id="resetFormElement">
                     <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="signupName" placeholder="Enter your name" required>
+                        <label>OTP Code</label>
+                        <input type="text" id="resetOtp" placeholder="Enter 6-digit OTP" required>
                     </div>
                     <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                        <label>New Password</label>
+                        <input type="password" id="resetNewPassword" placeholder="Enter new password" required minlength="6">
                     </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="signupPassword" placeholder="Enter your password (min 6 characters)" required minlength="6">
-                    </div>
-                    <button type="submit" class="btn-login">Sign Up</button>
-                    <div class="signup-text">
-                        Already have an account? <a href="#" id="switchToLogin">Sign in</a>
+                    <button type="submit" class="btn-login" id="resetBtn">Reset Password</button>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="#" id="cancelResetLink" style="color: #7a7a7a; font-size: 14px; text-decoration: none;">Cancel</a>
                     </div>
                 </form>
             </div>
 
-            <!-- RIGHT COLUMN – YOUR IMAGE -->
+            <!-- RIGHT COLUMN IMAGE -->
             <div class="login-image">
-                <img src="image1.png" alt="Pharmacy">
+                <img src="image1.png" alt="Om Medical">
             </div>
         </div>
 
-        <!-- FOOTER -->
         <footer>
-            <p>© 2024 PharmaEasy. All rights reserved.</p>
+            <p>© 2026 Om Medical. All rights reserved.</p>
         </footer>
     </div>
 
     <script>
-        // Wait for DOM to be ready
         document.addEventListener('DOMContentLoaded', function() {
-            // DOM elements
-            const loginForm = document.getElementById('loginForm');
-            const signupForm = document.getElementById('signupForm');
-            const loginFormElement = document.getElementById('loginFormElement');
-            const signupFormElement = document.getElementById('signupFormElement');
-            const showSignupBtn = document.getElementById('showSignupBtn');
-            const showLoginBtn = document.getElementById('showLoginBtn');
-            const switchToSignup = document.getElementById('switchToSignup');
-            const switchToLogin = document.getElementById('switchToLogin');
+            // View containers
+            const loginFormContainer = document.getElementById('loginFormContainer');
+            const forgotFormContainer = document.getElementById('forgotFormContainer');
+            const resetFormContainer = document.getElementById('resetFormContainer');
 
-            // Inputs
+            // Forms internals
+            const loginFormElement = document.getElementById('loginFormElement');
+            const forgotFormElement = document.getElementById('forgotFormElement');
+            const resetFormElement = document.getElementById('resetFormElement');
+
+            function switchView(viewId) {
+                loginFormContainer.style.display = 'none';
+                forgotFormContainer.style.display = 'none';
+                resetFormContainer.style.display = 'none';
+                document.getElementById(viewId).style.display = 'block';
+            }
+
+            // View Switch Listeners
+            document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('forgotFormContainer');
+            });
+            document.getElementById('backToLoginLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('loginFormContainer');
+            });
+            document.getElementById('cancelResetLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('loginFormContainer');
+            });
+
+            // 1. LOGIN
             const loginEmail = document.getElementById('loginEmail');
             const loginPassword = document.getElementById('loginPassword');
-            const signupName = document.getElementById('signupName');
-            const signupEmail = document.getElementById('signupEmail');
-            const signupPassword = document.getElementById('signupPassword');
+            const loginBtn = document.getElementById('loginBtn');
 
-            // Toggle functions
-            function showLogin() {
-                loginForm.style.display = 'block';
-                signupForm.style.display = 'none';
-            }
-            function showSignup() {
-                loginForm.style.display = 'none';
-                signupForm.style.display = 'block';
-            }
-
-            // Toggle event listeners
-            if (showSignupBtn) showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
-            if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
-            if (switchToSignup) switchToSignup.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
-            if (switchToLogin) switchToLogin.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
-
-            // Helper validation
-            function validateEmail(email) {
-                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return re.test(email);
+            // If already logged in with valid token → go to dashboard
+            const existingToken = localStorage.getItem('token');
+            if (existingToken) {
+                try {
+                    const payload = JSON.parse(atob(existingToken.split('.')[1]));
+                    if (payload.exp && Date.now() < payload.exp * 1000) {
+                        window.location.href = '/dashboard.html';
+                        return;
+                    } else {
+                        localStorage.removeItem('token');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('token');
+                }
             }
 
-            // Handle login
             loginFormElement.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = loginEmail.value.trim();
                 const password = loginPassword.value;
 
                 if (!email || !password) {
-                    showNotification('Please enter email and password', 'error');
-                    return;
-                }
-                if (!validateEmail(email)) {
-                    showNotification('Please enter a valid email address', 'error');
-                    return;
-                }
-                if (password.length < 6) {
-                    showNotification('Password must be at least 6 characters', 'error');
+                    showNotification('Please enter username and password', 'error');
                     return;
                 }
 
-                const submitBtn = loginFormElement.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Logging in...';
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Logging in...';
 
                 try {
                     const response = await apiCall('/login', {
                         method: 'POST',
                         body: JSON.stringify({ email, password })
                     });
-                    if (response.success && response.token) {
+
+                    if (response && response.success && response.token) {
                         setToken(response.token);
                         showNotification('Login successful! Redirecting...', 'success');
-                        setTimeout(() => window.location.href = '/dashboard.html', 1000);
+                        setTimeout(() => window.location.href = '/dashboard.html', 800);
                     } else {
                         showNotification('Login failed. Please try again.', 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Login';
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = 'Login';
                     }
                 } catch (error) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Login';
-                    // apiCall already shows notifications
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Login';
                 }
             });
 
-            // Handle signup
-            signupFormElement.addEventListener('submit', async (e) => {
+            // 2. FORGOT PASSWORD (SEND OTP)
+            let storedEmailForReset = '';
+            const forgotEmail = document.getElementById('forgotEmail');
+            const forgotBtn = document.getElementById('forgotBtn');
+
+            forgotFormElement.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const name = signupName.value.trim();
-                const email = signupEmail.value.trim();
-                const password = signupPassword.value;
+                const email = forgotEmail.value.trim();
+                if (!email) return showNotification('Please enter your email', 'error');
 
-                if (!name || !email || !password) {
-                    showNotification('Please fill all fields', 'error');
-                    return;
-                }
-                if (!validateEmail(email)) {
-                    showNotification('Please enter a valid email address', 'error');
-                    return;
-                }
-                if (password.length < 6) {
-                    showNotification('Password must be at least 6 characters', 'error');
-                    return;
-                }
-
-                const submitBtn = signupFormElement.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Creating account...';
+                forgotBtn.disabled = true;
+                forgotBtn.textContent = 'Sending...';
 
                 try {
-                    const response = await apiCall('/signup', {
+                    const response = await apiCall('/forgot-password', {
                         method: 'POST',
-                        body: JSON.stringify({ name, email, password })
+                        body: JSON.stringify({ email })
                     });
-                    if (response.success) {
-                        showNotification('Account created successfully! Please log in.', 'success');
-                        signupFormElement.reset();
-                        setTimeout(() => {
-                            showLogin();
-                            loginEmail.value = email;
-                        }, 1500);
+                    
+                    forgotBtn.disabled = false;
+                    forgotBtn.textContent = 'Send OTP';
+
+                    if (response && response.success) {
+                        showNotification('OTP sent successfully!', 'success');
+                        storedEmailForReset = email;
+                        switchView('resetFormContainer');
                     } else {
-                        showNotification(response.message || 'Signup failed', 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Sign Up';
+                        showNotification(response.message || 'Failed to send OTP.', 'error');
                     }
                 } catch (error) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Sign Up';
-                    // apiCall shows notification
+                    forgotBtn.disabled = false;
+                    forgotBtn.textContent = 'Send OTP';
                 }
             });
 
-            // Optional: redirect if already logged in
-            //if (isAuthenticated()) {
-           //     window.location.href = '/dashboard.html';
-           // }
+            // 3. RESET PASSWORD
+            const resetOtp = document.getElementById('resetOtp');
+            const resetNewPassword = document.getElementById('resetNewPassword');
+            const resetBtn = document.getElementById('resetBtn');
+
+            resetFormElement.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const otp = resetOtp.value.trim();
+                const newPassword = resetNewPassword.value;
+
+                if (!otp || !newPassword) return showNotification('Please fill all fields', 'error');
+
+                resetBtn.disabled = true;
+                resetBtn.textContent = 'Resetting...';
+
+                try {
+                    const response = await apiCall('/reset-password', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: storedEmailForReset, otp, newPassword })
+                    });
+
+                    resetBtn.disabled = false;
+                    resetBtn.textContent = 'Reset Password';
+
+                    if (response && response.success) {
+                        showNotification('Password Reset Successful! Please login.', 'success');
+                        switchView('loginFormContainer');
+                    } else {
+                        showNotification(response.message || 'Verification Failed', 'error');
+                    }
+                } catch (error) {
+                    resetBtn.disabled = false;
+                    resetBtn.textContent = 'Reset Password';
+                }
+            });
         });
     </script>
 </body>

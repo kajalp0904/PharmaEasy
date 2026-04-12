@@ -1,9 +1,10 @@
 /**
- * Centralized API Client for PharmaEasy
+ * Centralized API Client for Om Medical
  * Handles all API communication with automatic token injection and error handling
  */
 
-const API_BASE = 'https://pharmaeasy-backend-5ht5.onrender.com/api';
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE = isLocalhost ? 'http://localhost:5000/api' : 'https://pharmaeasy-backend-5ht5.onrender.com/api';
 
 /**
  * Display notification to user
@@ -125,14 +126,29 @@ function logout() {
 
 /**
  * Check if user is authenticated - redirect to login if not
- * Call this function on page load for protected pages
+ * Also checks if JWT is expired or malformed
  */
 function requireAuth() {
   const token = localStorage.getItem('token');
   if (!token) {
     window.location.href = '/login.html';
+    return;
+  }
+  // Decode JWT payload and check expiry
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      // Token expired — clear it and redirect
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+  } catch (e) {
+    // Malformed token — clear it and redirect
+    localStorage.removeItem('token');
+    window.location.href = '/login.html';
   }
 }
+
 
 /**
  * Get current authentication token

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmEasy - Bill Generated</title>
+    <title>Om Medical - Bill Generated</title>
     <link rel="stylesheet" href="css/bill-success.css">
     <!-- PDF generation libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
@@ -14,10 +14,11 @@
         <!-- SIDEBAR (DARK) – Generate Bill active -->
         <div class="sidebar">
             <div class="sidebar-logo">
-                <h1>PharmEasy</h1>
+                <h1>Om Medical</h1>
             </div>
             <nav>
                 <a href="dashboard.html" class="nav-item">Dashboard</a>
+                <a href="medicines.html" class="nav-item">All Medicines</a>
                 <a href="add-medicine.html" class="nav-item">Add Medicine</a>
                 <a href="generate-bill.html" class="nav-item active">Generate Bill</a>
                 <a href="billing-history.html" class="nav-item">Billing History</a>
@@ -194,7 +195,7 @@
                 pageSize: 'A4',
                 pageMargins: [40, 60, 40, 60],
                 header: {
-                    text: 'PharmEasy - Invoice',
+                    text: 'Om Medical - Invoice',
                     alignment: 'center',
                     margin: [0, 20, 0, 10],
                     fontSize: 18,

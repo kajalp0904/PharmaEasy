@@ -456,3 +456,73 @@ body {
 .suggestion-item:last-child {
     border-bottom: none;
 }
+
+/* ===== DASHBOARD STATS CARDS ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+@media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+    .stats-grid { grid-template-columns: 1fr; }
+}
+
+.stat-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-left: 4px solid #e0e0e0;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+.stat-icon { font-size: 30px; line-height: 1; }
+
+.stat-body { display: flex; flex-direction: column; gap: 3px; }
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2d2d2d;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #7a7a7a;
+    font-weight: 500;
+}
+
+/* Variants */
+.stat-warning { border-left-color: #ff9800; }
+.stat-warning .stat-value { color: #e65100; }
+
+.stat-danger  { border-left-color: #f44336; }
+.stat-danger  .stat-value { color: #c62828; }
+
+.stat-success { border-left-color: #4caf50; }
+.stat-success .stat-value { color: #2e7d32; }
+
+/* Pulsing glow when alert is active (lowStock or expiring > 0) */
+.stat-warning.stat-active,
+.stat-danger.stat-active {
+    animation: pulse-card 2s ease-in-out infinite;
+}
+
+@keyframes pulse-card {
+    0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+    50%       { box-shadow: 0 4px 16px rgba(255,107,53,0.3); }
+}

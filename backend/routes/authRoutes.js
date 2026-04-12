@@ -138,6 +138,15 @@ router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
+    // SECURITY: Only allow explicit admin emails to request a password reset
+    const allowedEmails = ['kajalgpatil0904@gmail.com', 'medicalom172@gmail.com'];
+    if (!allowedEmails.includes(email.toLowerCase())) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Security Restriction: Password reset is not permitted for this email.' 
+      });
+    }
+
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(404).json({ success: false, message: 'No account found with that email' });
 
@@ -150,12 +159,17 @@ router.post('/forgot-password', async (req, res) => {
 
     // Send OTP email
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false, // upgrade later with STARTTLS
+      auth: { 
+        user: process.env.BREVO_USER, // Your Brevo account email
+        pass: process.env.BREVO_PASS  // Your Brevo SMTP Master Password
+      }
     });
 
     await transporter.sendMail({
-      from: `"Om Medical" <${process.env.EMAIL_USER}>`,
+      from: `"Om Medical" <${process.env.SENDER_EMAIL}>`,
       to: user.email,
       subject: 'Password Reset OTP – Om Medical',
       html: `
