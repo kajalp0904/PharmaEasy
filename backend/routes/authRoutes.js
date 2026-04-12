@@ -125,7 +125,7 @@ router.post('/login', authLimiter, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'ServerError',
-      message: 'Error during login'
+      message: 'Error during login. ' + String(error.message || error)
     });
   }
 });
