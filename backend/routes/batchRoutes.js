@@ -6,15 +6,11 @@ const Batch = require("../models/Batch");
 const Medicine = require("../models/Medicine");
 const Location = require("../models/Location");
 
-console.log("📦 Batch routes module loaded");
-router.use((req, res, next) => {
-  console.log(`⚡ Batch router hit: ${req.method} ${req.url}`);
-  next();
-});
+
 
 // ============ VALIDATION MIDDLEWARE ============
 function validateBatchInput(req, res, next) {
-  const { medicineId, batchNumber, quantity, expiryDate, location, price } = req.body;
+  const { medicineId, batchNumber, quantity, expiryDate, price } = req.body;
   const errors = [];
   
   if (!medicineId) errors.push('medicineId is required');
@@ -24,9 +20,9 @@ function validateBatchInput(req, res, next) {
     errors.push('quantity must be a positive integer');
   if (!expiryDate) errors.push('expiryDate is required');
   else if (isNaN(Date.parse(expiryDate))) errors.push('expiryDate must be a valid date');
-  if (!location) errors.push('location is required');
   if (!price) errors.push('price is required');
   else if (isNaN(price) || parseFloat(price) <= 0) errors.push('price must be a positive number');
+  // Note: location is now OPTIONAL — auto-assigned if not provided
   
   if (errors.length > 0) {
     return res.status(400).json({ success: false, error: 'Validation failed', details: errors });
@@ -34,21 +30,19 @@ function validateBatchInput(req, res, next) {
   next();
 }
 
+
 // ============ TEST GET ROUTE ============
 router.get("/test-batch-get", (req, res) => {
-  console.log("🧪 TEST GET route called");
   res.json({ message: "Test GET route works!" });
 });
 
 // ============ ONE-CLICK FIX ============
 router.post("/oneclick-fix", auth, async (req, res) => {
-  console.log("🔧 ONE-CLICK FIX STARTED");
   try {
     const db = mongoose.connection.db;
     
     // 1. Clean empty batches
     const deleteResult = await db.collection('batches').deleteMany({ quantity: 0 });
-    console.log(`Deleted ${deleteResult.deletedCount} empty batches`);
     
     // 2. Fix duplicate locations
     const batches = await db.collection('batches').find({}).toArray();
@@ -56,7 +50,6 @@ router.post("/oneclick-fix", auth, async (req, res) => {
     for (const batch of batches) {
       if (locationMap[batch.location]) {
         const newLocation = `${batch.location}-ALT-${Date.now()}`;
-        console.log(`Moving duplicate ${batch.batchNumber} from ${batch.location} to ${newLocation}`);
         await db.collection('batches').updateOne(
           { _id: batch._id },
           { $set: { location: newLocation } }
@@ -111,7 +104,6 @@ router.post("/oneclick-fix", auth, async (req, res) => {
       );
     }
     
-    console.log("✅ ONE-CLICK FIX COMPLETE");
     res.json({
       success: true,
       message: "System fixed successfully!",
@@ -127,12 +119,10 @@ router.post("/oneclick-fix", auth, async (req, res) => {
   }
 });
 
-// ============ CREATE BATCH (NO TRANSACTION) ============
+// ============ CREATE BATCH ============
 router.post("/batches", auth, validateBatchInput, async (req, res) => {
-  console.log("🚀 BATCH CREATION (NO TRANSACTION)");
-  console.log("Request:", req.body);
-
   try {
+    console.log("POST /batches PAYLOAD:", req.body);
     const { medicineId, batchNumber, quantity, expiryDate, location, price } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(medicineId)) {
@@ -144,46 +134,82 @@ router.post("/batches", auth, validateBatchInput, async (req, res) => {
       return res.status(404).json({ success: false, error: "Medicine not found" });
     }
 
-    const locationRecord = await Location.findOne({ code: location, isOccupied: false });
-    if (!locationRecord) {
-      return res.status(400).json({ success: false, error: "Location is not available or already occupied" });
+    // ===== LOCATION: auto-assign if none provided or none free =====
+    let assignedLocation = location || null;
+    let locationRecord = null;
+
+    if (assignedLocation) {
+      // Try to use the requested location
+      locationRecord = await Location.findOne({ code: assignedLocation, isOccupied: false });
     }
 
+    if (!locationRecord) {
+      // Try any free location
+      locationRecord = await Location.findOne({ isOccupied: false });
+    }
+
+    if (!locationRecord) {
+      // No free location -> generate a new dynamic one!
+      try {
+        const { generateNextLocationCode } = require('./locationRoutes');
+        const nextCode = await generateNextLocationCode();
+        
+        locationRecord = new Location({
+          code: nextCode,
+          isOccupied: false
+        });
+        await locationRecord.save();
+      } catch (err) {
+        console.error("❌ Failed to generate new location:", err.message);
+      }
+    }
+
+    // Final fallback: use a generated code so the batch is NEVER blocked
+    assignedLocation = locationRecord ? locationRecord.code : `AUTO-${Date.now()}`;
+
+    // ===== SAVE BATCH =====
     const batch = new Batch({
       medicine: medicineId,
       batchNumber,
       quantity: parseInt(quantity),
-      location,
+      location: assignedLocation,
       expiryDate: new Date(expiryDate),
       price: parseFloat(price)
     });
-    await batch.save();
-    console.log("Batch saved:", batch._id);
+    await batch.save(); // post-save hook fires as backup
 
-    locationRecord.isOccupied = true;
-    locationRecord.currentBatch = batch._id;
-    locationRecord.medicineName = medicine.name;
-    locationRecord.batchNumber = batchNumber;
-    locationRecord.quantity = parseInt(quantity);
-    locationRecord.expiryDate = new Date(expiryDate);
-    await locationRecord.save();
-    console.log("Location updated");
+    // ===== EXPLICIT STOCK RECALCULATION (guaranteed to run) =====
+    // Do NOT rely solely on the hook — recalculate here synchronously
+    const stockResult = await Batch.aggregate([
+      { $match: { medicine: new mongoose.Types.ObjectId(medicineId) } },
+      { $group: { _id: null, total: { $sum: '$quantity' } } }
+    ]);
+    const calculatedStock = stockResult[0]?.total || 0;
+    await Medicine.findByIdAndUpdate(medicineId, { $set: { totalStock: calculatedStock } });
 
-    medicine.totalStock += parseInt(quantity);
-    await medicine.save();
-    console.log(`Medicine stock: ${medicine.totalStock}`);
+    // Update location record if we have one
+    if (locationRecord) {
+      locationRecord.isOccupied = true;
+      locationRecord.currentBatch = batch._id;
+      locationRecord.medicineName = medicine.name;
+      locationRecord.batchNumber = batchNumber;
+      locationRecord.quantity = parseInt(quantity);
+      locationRecord.expiryDate = new Date(expiryDate);
+      await locationRecord.save();
+    }
 
     res.status(201).json({
       success: true,
-      message: `✅ Batch added to ${locationRecord.code}`,
+      message: `✅ Batch added successfully at ${assignedLocation}`,
       data: {
         batchId: batch._id,
-        location: locationRecord.code,
+        location: assignedLocation,
         medicine: medicine.name,
         quantity: batch.quantity,
-        newStock: medicine.totalStock
+        newStock: calculatedStock
       }
     });
+
 
   } catch (error) {
     console.error("❌ Batch creation error:", error.message);
@@ -191,9 +217,9 @@ router.post("/batches", auth, validateBatchInput, async (req, res) => {
   }
 });
 
+
 // ============ GET ALL BATCHES ============
 router.get("/batches", auth, async (req, res) => {
-  console.log("🔍 GET /batches called");
   try {
     const { medicine } = req.query;
     let query = {};
@@ -209,11 +235,10 @@ router.get("/batches", auth, async (req, res) => {
       .populate('medicine', 'name manufacturer price')
       .sort({ createdAt: -1 });
     
-    console.log(`✅ Found ${batches.length} batches`);
     res.status(200).json({ success: true, count: batches.length, batches });
     
   } catch (err) {
-    console.log("❌ Error:", err.message);
+    console.error("❌ Error fetching batches:", err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -250,17 +275,8 @@ router.post("/fix-stock/:medicineId", auth, async (req, res) => {
     });
     
   } catch (error) {
-    console.error("Fix stock error:", error);
+    console.error("Fix stock error:", error.message);
     res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Log all routes
-console.log("📋 Registered batch routes:");
-router.stack.forEach((r) => {
-  if (r.route) {
-    const methods = Object.keys(r.route.methods).join(',').toUpperCase();
-    console.log(`  ${methods} ${r.route.path}`);
   }
 });
 

@@ -78,4 +78,46 @@ router.get("/locations/free", auth, async (req, res) => {
   }
 });
 
+// Helper function to generate the next dynamic location code
+async function generateNextLocationCode() {
+  const locations = await Location.find({}, 'code');
+  if (locations.length === 0) return 'S1-R1';
+  
+  let maxShelf = 0;
+  let maxRack = 0;
+
+  locations.forEach(loc => {
+    const match = loc.code.match(/^S(\d+)-R(\d+)$/);
+    if (match) {
+      const shelf = parseInt(match[1]);
+      const rack = parseInt(match[2]);
+      if (shelf > maxShelf) {
+        maxShelf = shelf;
+        maxRack = rack;
+      } else if (shelf === maxShelf && rack > maxRack) {
+        maxRack = rack;
+      }
+    }
+  });
+
+  if (maxShelf === 0) return 'S1-R1';
+
+  if (maxRack >= 5) {
+    return `S${maxShelf + 1}-R1`;
+  } else {
+    return `S${maxShelf}-R${maxRack + 1}`;
+  }
+}
+
+// Endpoint to fetch the next code (useful for debugging/admin)
+router.get("/locations/next-code", auth, async (req, res) => {
+  try {
+    const nextCode = await generateNextLocationCode();
+    res.json({ success: true, nextCode });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;
+module.exports.generateNextLocationCode = generateNextLocationCode;

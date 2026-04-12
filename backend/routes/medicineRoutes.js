@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose"); // ✅ Added for ObjectId validation
 const Medicine = require("../models/Medicine");
 const Batch = require("../models/Batch");
+const Location = require("../models/Location");
 const auth = require("../middleware/auth");
 
 // Validation middleware for medicine input
@@ -207,14 +208,18 @@ router.post("/sync-all-stock", auth, async (req, res) => {
   }
 });
 
-// ========== NEW: Search medicines (for autocomplete) ==========
+// ========== Search medicines (for autocomplete) ==========
 // GET /api/medicines/search?q=...
 router.get("/medicines/search", auth, async (req, res) => {
   try {
     const query = req.query.q;
     if (!query || query.length < 2) return res.json([]);
+
+    // Escape special regex characters so user input is treated as literal text
+    const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     const medicines = await Medicine.find({
-      name: { $regex: query, $options: "i" }
+      name: { $regex: safeQuery, $options: "i" }
     }).limit(10);
     res.json(medicines);
   } catch (err) {
@@ -224,6 +229,7 @@ router.get("/medicines/search", auth, async (req, res) => {
     });
   }
 });
+
 
 // ========== NEW: Get single medicine by ID ==========
 // GET /api/medicines/:id (with validation)
@@ -257,16 +263,61 @@ router.get("/medicines/:id", auth, async (req, res) => {
 // POST /api/medicines
 router.post("/medicines", auth, validateMedicineInput, async (req, res) => {
   try {
-    const { name, price, minimumStock, category, manufacturer } = req.body;
+    console.log("POST /medicines PAYLOAD:", req.body);
+    const { name, price, minimumStock, category, manufacturer, initialQuantity, initialBatchNumber, initialExpiryDate } = req.body;
     
     // Check for duplicate medicine name
     const existing = await Medicine.findOne({ name });
     if (existing) {
-      return res.status(409).json({ 
-        success: false, 
-        error: 'Duplicate resource',
-        message: `Medicine with name '${name}' already exists` 
-      });
+      if (initialQuantity > 0 && initialBatchNumber && initialExpiryDate) {
+        // If medicine exists but they provided batch info, let's just add the batch!
+        // This makes the form "smart"
+        
+        let locationRecord = await Location.findOne({ isOccupied: false }).sort({ code: 1 });
+        if (!locationRecord) {
+           locationRecord = { code: `AUTO-${Date.now()}` };
+        }
+        
+        const batch = new Batch({
+          medicine: existing._id,
+          batchNumber: initialBatchNumber,
+          quantity: parseInt(initialQuantity),
+          location: locationRecord.code,
+          expiryDate: new Date(initialExpiryDate),
+          price: parseFloat(price)
+        });
+        await batch.save();
+        
+        // explicit calc
+        const stockResult = await Batch.aggregate([
+          { $match: { medicine: existing._id } },
+          { $group: { _id: null, total: { $sum: '$quantity' } } }
+        ]);
+        const calculatedStock = stockResult[0]?.total || 0;
+        await Medicine.findByIdAndUpdate(existing._id, { $set: { totalStock: calculatedStock } });
+
+        if (locationRecord.save) {
+          locationRecord.isOccupied = true;
+          locationRecord.currentBatch = batch._id;
+          locationRecord.medicineName = existing.name;
+          locationRecord.batchNumber = initialBatchNumber;
+          locationRecord.quantity = parseInt(initialQuantity);
+          locationRecord.expiryDate = new Date(initialExpiryDate);
+          await locationRecord.save();
+        }
+
+        return res.status(201).json({ 
+          success: true, 
+          message: `Medicine already existed, so we added a new batch instead!`,
+          medicine: existing 
+        });
+      } else {
+        return res.status(409).json({ 
+          success: false, 
+          error: 'Duplicate resource',
+          message: `Medicine with name '${name}' already exists` 
+        });
+      }
     }
     
     // Create new medicine
@@ -281,6 +332,42 @@ router.post("/medicines", auth, validateMedicineInput, async (req, res) => {
     
     await medicine.save();
     
+    // Auto-create initial batch if details provided
+    if (initialQuantity > 0 && initialBatchNumber && initialExpiryDate) {
+        let locationRecord = await Location.findOne({ isOccupied: false }).sort({ code: 1 });
+        if (!locationRecord) {
+           locationRecord = { code: `AUTO-${Date.now()}` };
+        }
+        
+        const batch = new Batch({
+          medicine: medicine._id,
+          batchNumber: initialBatchNumber,
+          quantity: parseInt(initialQuantity),
+          location: locationRecord.code,
+          expiryDate: new Date(initialExpiryDate),
+          price: parseFloat(price)
+        });
+        await batch.save();
+
+        const stockResult = await Batch.aggregate([
+          { $match: { medicine: medicine._id } },
+          { $group: { _id: null, total: { $sum: '$quantity' } } }
+        ]);
+        const calculatedStock = stockResult[0]?.total || 0;
+        await Medicine.findByIdAndUpdate(medicine._id, { $set: { totalStock: calculatedStock } });
+        medicine.totalStock = calculatedStock;
+
+        if (locationRecord.save) {
+          locationRecord.isOccupied = true;
+          locationRecord.currentBatch = batch._id;
+          locationRecord.medicineName = medicine.name;
+          locationRecord.batchNumber = initialBatchNumber;
+          locationRecord.quantity = parseInt(initialQuantity);
+          locationRecord.expiryDate = new Date(initialExpiryDate);
+          await locationRecord.save();
+        }
+    }
+
     res.status(201).json({ 
       success: true, 
       message: "Medicine added successfully", 
@@ -288,6 +375,7 @@ router.post("/medicines", auth, validateMedicineInput, async (req, res) => {
     });
     
   } catch (err) {
+    console.error("❌ CRITICAL ERROR in /medicines route:", err);
     // Handle Mongoose validation errors
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map(e => e.message);

@@ -1,0 +1,27 @@
+{
+  "top_batch": {
+    "_id": "69d028c830652853aa1566dd",
+    "medicine": "69d02010b35a6cbf43e898e4",
+    "batchNumber": "BATCH-001",
+    "quantity": 20,
+    "location": "S1-R2",
+    "expiryDate": "2026-04-04T00:00:00.000Z",
+    "price": 50,
+    "createdAt": "2026-04-03T20:53:29.017Z",
+    "updatedAt": "2026-04-03T20:53:29.017Z",
+    "__v": 0
+  },
+  "top_med": {
+    "_id": "69d4be819e4345c1e0a8bf80",
+    "name": "Test Med 11",
+    "price": 50,
+    "totalStock": 0,
+    "minimumStock": 10,
+    "category": "Antibiotic",
+    "manufacturer": "Unknown",
+    "createdAt": "2026-04-07T08:21:21.504Z",
+    "__v": 0
+  },
+  "batch_count": 104,
+  "med_count": 108
+}

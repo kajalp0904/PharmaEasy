@@ -1,0 +1,133 @@
+[dotenv@17.2.3] injecting env (8) from .env -- tip: ⚙️  override existing env vars with { override: true }
+✅ Connected to MongoDB
+✅ Added Dabur Honitus Cough Syrup (₹65) at S1-R1
+✅ Added Himalaya Koflet Syrup (₹95) at S1-R2
+✅ Added Vicks Cough Syrup (₹105) at S1-R3
+✅ Added Benadryl Cough Syrup (₹100) at S1-R4
+✅ Added Alex Sugar Free Syrup (₹145) at S1-R5
+✅ Added Tusq DX Syrup (₹110) at S10-R1
+✅ Added Corex DX Syrup (₹160) at S10-R2
+✅ Added Bro-Zedex Syrup (₹175) at S10-R3
+✅ Added Zedex SF Syrup (₹190) at S10-R4
+✅ Added Coffdryl Syrup (₹90) at S10-R5
+✅ Added Kofol Syrup (₹105) at S11-R1
+✅ Added Zandu Ayurvedic Cough Syrup (₹120) at S11-R2
+✅ Added Baidyanath Kasamrit Syrup (₹230) at S11-R3
+✅ Added Cofsils Naturals Syrup (₹210) at S11-R4
+✅ Added Multani Kuka Syrup (₹190) at S11-R5
+✅ Added SBL Stobal Cough Syrup (₹90) at S12-R1
+✅ Added Tixylix Syrup (₹130) at S12-R2
+✅ Added Omkar Adulsa Syrup (₹100) at S12-R3
+✅ Added Dr. Honey Cough Syrup (₹90) at S12-R4
+✅ Added Kufex Syrup (₹85) at S12-R5
+✅ Added Xone XP 1.125gm Injection (₹238) at S13-R1
+✅ Added Mikacin 500mg Injection (₹100) at S13-R2
+✅ Added Meronem 1gm Injection (₹1000) at S13-R3
+✅ Added Monocef 1gm Injection (₹95) at S13-R4
+✅ Added Cefaxone 1gm Injection (₹48) at S13-R5
+✅ Added Ceftrisone-S Injection (₹150) at S14-R1
+✅ Added Cefoperazone + Sulbactam Injection (₹200) at S14-R2
+✅ Added Amikacin 500mg Injection (₹110) at S14-R3
+✅ Added Amikacin 250mg Injection (₹60) at S14-R4
+✅ Added Amicin 500mg Injection (₹120) at S14-R5
+✅ Added Ciprofloxacin Injection (₹80) at S15-R1
+✅ Added Ceftazidime 1gm Injection (₹160) at S15-R2
+✅ Added Cefotaxime 1gm Injection (₹60) at S15-R3
+✅ Added Linezolid Injection (₹1000) at S15-R4
+✅ Added Vancomycin Injection (₹1400) at S15-R5
+✅ Added Teicoplanin Injection (₹2100) at S16-R1
+✅ Added Imipenem + Cilastatin Injection (₹2500) at S16-R2
+✅ Added Aztreonam Injection (₹750) at S16-R3
+✅ Added Tigecycline Injection (₹3000) at S16-R4
+✅ Added Colistin Injection (₹3250) at S16-R5
+✅ Added Dolo 650 Tablet (₹32) at S17-R1
+✅ Added Crocin 650 Tablet (₹35) at S17-R2
+✅ Added Calpol 500 Tablet (₹20) at S17-R3
+✅ Added Saridon Tablet (₹52) at S17-R4
+✅ Added Brufen 400 Tablet (₹15) at S17-R5
+✅ Added Ibugesic Tablet (₹18) at S18-R1
+✅ Added Combiflam Tablet (₹30) at S18-R2
+✅ Added Brustan Tablet (₹14) at S18-R3
+✅ Added Flexon Tablet (₹15) at S18-R4
+✅ Added Zerodol-P Tablet (₹80) at S18-R5
+✅ Added Hifenac-P Tablet (₹100) at S19-R1
+✅ Added Voveran 50mg Tablet (₹70) at S19-R2
+✅ Added Dicloran 50mg Tablet (₹35) at S19-R3
+✅ Added Zerodol 100mg Tablet (₹80) at S19-R4
+✅ Added Ultracet Tablet (₹125) at S19-R5
+✅ Added Tramadol 50mg Tablet (₹100) at S2-R1
+✅ Added Tapentadol 100mg Tablet (₹225) at S2-R2
+✅ Added Etoshine 60mg Tablet (₹115) at S2-R3
+✅ Added Vomikind-MD 4mg Tablet (₹48) at S2-R4
+✅ Added Vomishunt 4mg Tablet (₹24) at S2-R5
+✅ Added Vomitron 8mg Tablet (₹75) at S20-R1
+✅ Added Ondem-4 Tablet (₹65) at S20-R2
+✅ Added Emeset 4mg Tablet (₹65) at S20-R3
+✅ Added Domstal 10mg Tablet (₹42) at S20-R4
+✅ Added Motilium 10mg Tablet (₹75) at S20-R5
+✅ Added Domperon 10mg Tablet (₹38) at S3-R1
+✅ Added Pantocid DSR Capsule (₹252) at S3-R2
+✅ Added Esomez-D Tablet (₹135) at S3-R3
+✅ Added Doxinate OD Tablet (₹462) at S3-R4
+✅ Added Doxikind Tablet (₹59) at S3-R5
+✅ Added Vomilast Tablet (₹190) at S4-R1
+✅ Added Ondem Syrup (₹38) at S4-R2
+✅ Added Vomikind Syrup (₹40) at S4-R3
+✅ Added Periset Syrup (₹40) at S4-R4
+✅ Added Domstal Suspension (₹25) at S4-R5
+✅ Added Motinorm Syrup (₹25) at S5-R1
+✅ Added Mefkind Spas Tablet (₹50) at S5-R2
+✅ Added Dicomef Tablet (₹30) at S5-R3
+✅ Added Meftal Spas Tablet (₹55) at S5-R4
+✅ Added Cyclopam Tablet (₹48) at S5-R5
+✅ Added Buscopan 10mg Tablet (₹80) at S6-R1
+✅ Added Hyocimax S Tablet (₹58) at S6-R2
+✅ Added Drotin 40mg Tablet (₹75) at S6-R3
+✅ Added Drotin DS Tablet (₹100) at S6-R4
+✅ Added No-Spa 40mg Tablet (₹90) at S6-R5
+✅ Added Spasmo Proxyvon Tablet (₹105) at S7-R1
+✅ Added Malarid 80/480 Tablet (₹150) at S7-R2
+✅ Added Lumifen 80/480 Tablet (₹120) at S7-R3
+✅ Added Lumerax 20/120 Tablet (₹75) at S7-R4
+✅ Added Actizo Tablet (₹95) at S7-R5
+✅ Added Combither Tablet (₹102) at S8-R1
+✅ Added Arterion-L Tablet (₹105) at S8-R2
+✅ Added Falcikil-AL Tablet (₹150) at S8-R3
+✅ Added Lariago 250mg Tablet (₹30) at S8-R4
+✅ Added Primaquine 7.5mg Tablet (₹15) at S8-R5
+✅ Added Hydroxychloroquine 200mg Tablet (₹70) at S9-R1
+✅ Added Quinine Sulphate 300mg Tablet (₹85) at S9-R2
+✅ Added Nocold Tablet (₹32) at S9-R3
+✅ Added D Cold Tablet (₹22) at S9-R4
+✅ Added Sinarest Tablet (₹123) at S9-R5
+➕ Created new loc dynamically: S21-R1
+✅ Added Vicks Action 500 Tablet (₹64) at S21-R1
+➕ Created new loc dynamically: S21-R2
+✅ Added Solvin Cold Tablet (₹69) at S21-R2
+➕ Created new loc dynamically: S21-R3
+✅ Added Sumocold Tablet (₹41) at S21-R3
+➕ Created new loc dynamically: S21-R4
+✅ Added Flucold Tablet (₹46) at S21-R4
+➕ Created new loc dynamically: S21-R5
+✅ Added Coldaid Plus Tablet (₹93) at S21-R5
+➕ Created new loc dynamically: S22-R1
+✅ Added Levocet 5mg Tablet (₹45) at S22-R1
+➕ Created new loc dynamically: S22-R2
+✅ Added Xyzal 5mg Tablet (₹165) at S22-R2
+➕ Created new loc dynamically: S22-R3
+✅ Added Alerid 10mg Tablet (₹30) at S22-R3
+➕ Created new loc dynamically: S22-R4
+✅ Added Allegra 120mg Tablet (₹200) at S22-R4
+➕ Created new loc dynamically: S22-R5
+✅ Added Teczine 5mg Tablet (₹90) at S22-R5
+➕ Created new loc dynamically: S23-R1
+✅ Added Glencet 5mg Tablet (₹35) at S23-R1
+➕ Created new loc dynamically: S23-R2
+✅ Added Cetirizine 10mg Tablet (₹25) at S23-R2
+➕ Created new loc dynamically: S23-R3
+✅ Added Lorfast 10mg Tablet (₹60) at S23-R3
+➕ Created new loc dynamically: S23-R4
+✅ Added Montair LC Tablet (₹150) at S23-R4
+➕ Created new loc dynamically: S23-R5
+✅ Added Montek LC Tablet (₹170) at S23-R5
+🎉 Imported 115 medicines and 115 batches.

@@ -1,0 +1,116 @@
+name,category,price,dosageForm,strength,manufacturer
+Dabur Honitus Cough Syrup,Cough Syrup,65,Syrup,100ml,Dabur
+Himalaya Koflet Syrup,Cough Syrup,95,Syrup,100ml,Himalaya
+Vicks Cough Syrup,Cough Syrup,105,Syrup,100ml,P&G
+Benadryl Cough Syrup,Cough Syrup,100,Syrup,100ml,Benadryl
+Alex Sugar Free Syrup,Cough Syrup,145,Syrup,100ml,Alex
+Tusq DX Syrup,Cough Syrup,110,Syrup,100ml,Tusq
+Corex DX Syrup,Cough Syrup,160,Syrup,100ml,Pfizer
+Bro-Zedex Syrup,Cough Syrup,175,Syrup,100ml,Bro-Zedex
+Zedex SF Syrup,Cough Syrup,190,Syrup,100ml,Zedex
+Coffdryl Syrup,Cough Syrup,90,Syrup,100ml,Coffdryl
+Kofol Syrup,Cough Syrup,105,Syrup,100ml,Kofol
+Zandu Ayurvedic Cough Syrup,Cough Syrup,120,Syrup,100ml,Zandu
+Baidyanath Kasamrit Syrup,Cough Syrup,230,Syrup,100ml,Baidyanath
+Cofsils Naturals Syrup,Cough Syrup,210,Syrup,100ml,Cofsils
+Multani Kuka Syrup,Cough Syrup,190,Syrup,100ml,Multani
+SBL Stobal Cough Syrup,Cough Syrup,90,Syrup,100ml,SBL
+Tixylix Syrup,Cough Syrup,130,Syrup,100ml,Tixylix
+Omkar Adulsa Syrup,Cough Syrup,100,Syrup,100ml,Omkar
+Dr. Honey Cough Syrup,Cough Syrup,90,Syrup,100ml,Dr. Honey
+Kufex Syrup,Cough Syrup,85,Syrup,100ml,Kufex
+Xone XP 1.125gm Injection,Antibiotic Injection,238,Injection,1.125gm,Xone
+Mikacin 500mg Injection,Antibiotic Injection,100,Injection,500mg,Mikacin
+Meronem 1gm Injection,Antibiotic Injection,1000,Injection,1gm,Merck
+Monocef 1gm Injection,Antibiotic Injection,95,Injection,1gm,Aristo
+Cefaxone 1gm Injection,Antibiotic Injection,48,Injection,1gm,Ranbaxy
+Ceftrisone-S Injection,Antibiotic Injection,150,Injection,1gm,Sun Pharma
+Cefoperazone + Sulbactam Injection,Antibiotic Injection,200,Injection,1.5gm,Pfizer
+Amikacin 500mg Injection,Antibiotic Injection,110,Injection,500mg,Amikacin
+Amikacin 250mg Injection,Antibiotic Injection,60,Injection,250mg,Amikacin
+Amicin 500mg Injection,Antibiotic Injection,120,Injection,500mg,Amicin
+Ciprofloxacin Injection,Antibiotic Injection,80,Injection,200mg,Cipla
+Ceftazidime 1gm Injection,Antibiotic Injection,160,Injection,1gm,Glaxo
+Cefotaxime 1gm Injection,Antibiotic Injection,60,Injection,1gm,Aventis
+Linezolid Injection,Antibiotic Injection,1000,Injection,600mg,Pfizer
+Vancomycin Injection,Antibiotic Injection,1400,Injection,500mg,Lilly
+Teicoplanin Injection,Antibiotic Injection,2100,Injection,400mg,Sanofi
+Imipenem + Cilastatin Injection,Antibiotic Injection,2500,Injection,500mg,Merck
+Aztreonam Injection,Antibiotic Injection,750,Injection,1gm,Bristol
+Tigecycline Injection,Antibiotic Injection,3000,Injection,50mg,Pfizer
+Colistin Injection,Antibiotic Injection,3250,Injection,1gm,Fresenius
+Dolo 650 Tablet,Painkiller Tablet,32,Tablet,650mg,Micro Labs
+Crocin 650 Tablet,Painkiller Tablet,35,Tablet,650mg,GSK
+Calpol 500 Tablet,Painkiller Tablet,20,Tablet,500mg,GSK
+Saridon Tablet,Painkiller Tablet,52,Tablet,Combination,Bayer
+Brufen 400 Tablet,Painkiller Tablet,15,Tablet,400mg,Abbott
+Ibugesic Tablet,Painkiller Tablet,18,Tablet,400mg,Cipla
+Combiflam Tablet,Painkiller Tablet,30,Tablet,Combination,Sanofi
+Brustan Tablet,Painkiller Tablet,14,Tablet,Combination,Wockhardt
+Flexon Tablet,Painkiller Tablet,15,Tablet,Combination,Aristo
+Zerodol-P Tablet,Painkiller Tablet,80,Tablet,Combination,IPCA
+Hifenac-P Tablet,Painkiller Tablet,100,Tablet,Combination,Intas
+Voveran 50mg Tablet,Painkiller Tablet,70,Tablet,50mg,Novartis
+Dicloran 50mg Tablet,Painkiller Tablet,35,Tablet,50mg,Unichem
+Zerodol 100mg Tablet,Painkiller Tablet,80,Tablet,100mg,IPCA
+Ultracet Tablet,Painkiller Tablet,125,Tablet,Combination,Janssen
+Tramadol 50mg Tablet,Painkiller Tablet,100,Tablet,50mg,Unichem
+Tapentadol 100mg Tablet,Painkiller Tablet,225,Tablet,100mg,Johnson
+Etoshine 60mg Tablet,Painkiller Tablet,115,Tablet,60mg,Sun Pharma
+Vomikind-MD 4mg Tablet,Anti-Emetic Tablet,48,Tablet,4mg,Mankind
+Vomishunt 4mg Tablet,Anti-Emetic Tablet,24,Tablet,4mg,Shunt
+Vomitron 8mg Tablet,Anti-Emetic Tablet,75,Tablet,8mg,Unichem
+Ondem-4 Tablet,Anti-Emetic Tablet,65,Tablet,4mg,Cipla
+Emeset 4mg Tablet,Anti-Emetic Tablet,65,Tablet,4mg,Intas
+Domstal 10mg Tablet,Anti-Emetic Tablet,42,Tablet,10mg,Torrent
+Motilium 10mg Tablet,Anti-Emetic Tablet,75,Tablet,10mg,Janssen
+Domperon 10mg Tablet,Anti-Emetic Tablet,38,Tablet,10mg,IPCA
+Pantocid DSR Capsule,Anti-Emetic Capsule,252,Capsule,Combination,Sun Pharma
+Esomez-D Tablet,Anti-Emetic Tablet,135,Tablet,Combination,Intas
+Doxinate OD Tablet,Anti-Emetic Tablet,462,Tablet,Combination,Ordain
+Doxikind Tablet,Anti-Emetic Tablet,59,Tablet,Combination,Mankind
+Vomilast Tablet,Anti-Emetic Tablet,190,Tablet,Combination,Leeford
+Ondem Syrup,Anti-Emetic Syrup,38,Syrup,30ml,Cipla
+Vomikind Syrup,Anti-Emetic Syrup,40,Syrup,30ml,Mankind
+Periset Syrup,Anti-Emetic Syrup,40,Syrup,30ml,IPCA
+Domstal Suspension,Anti-Emetic Syrup,25,Syrup,30ml,Torrent
+Motinorm Syrup,Anti-Emetic Syrup,25,Syrup,30ml,Emcure
+Mefkind Spas Tablet,Antispasmodic Tablet,50,Tablet,Combination,Mankind
+Dicomef Tablet,Antispasmodic Tablet,30,Tablet,Combination,Alkem
+Meftal Spas Tablet,Antispasmodic Tablet,55,Tablet,Combination,Blue Cross
+Cyclopam Tablet,Antispasmodic Tablet,48,Tablet,Combination,Indoco
+Buscopan 10mg Tablet,Antispasmodic Tablet,80,Tablet,10mg,Sanofi
+Hyocimax S Tablet,Antispasmodic Tablet,58,Tablet,Combination,Sun Pharma
+Drotin 40mg Tablet,Antispasmodic Tablet,75,Tablet,40mg,Walter Bushnell
+Drotin DS Tablet,Antispasmodic Tablet,100,Tablet,80mg,Walter Bushnell
+No-Spa 40mg Tablet,Antispasmodic Tablet,90,Tablet,40mg,Sanofi
+Spasmo Proxyvon Tablet,Antispasmodic Tablet,105,Tablet,Combination,Wockhardt
+Malarid 80/480 Tablet,Anti-Malarial Tablet,150,Tablet,Combination,IPCA
+Lumifen 80/480 Tablet,Anti-Malarial Tablet,120,Tablet,Combination,Lupin
+Lumerax 20/120 Tablet,Anti-Malarial Tablet,75,Tablet,Combination,Ajanta
+Actizo Tablet,Anti-Malarial Tablet,95,Tablet,Combination,Cipla
+Combither Tablet,Anti-Malarial Tablet,102,Tablet,Combination,Glaxo
+Arterion-L Tablet,Anti-Malarial Tablet,105,Tablet,Combination,Orion
+Falcikil-AL Tablet,Anti-Malarial Tablet,150,Tablet,Combination,Astema
+Lariago 250mg Tablet,Anti-Malarial Tablet,30,Tablet,250mg,IPCA
+Primaquine 7.5mg Tablet,Anti-Malarial Tablet,15,Tablet,7.5mg,IPCA
+Hydroxychloroquine 200mg Tablet,Anti-Malarial Tablet,70,Tablet,200mg,Zydus
+Quinine Sulphate 300mg Tablet,Anti-Malarial Tablet,85,Tablet,300mg,Merck
+Nocold Tablet,Anti-Cold Tablet,32,Tablet,Combination,Mankind
+D Cold Tablet,Anti-Cold Tablet,22,Tablet,Combination,Dr. Reddy's
+Sinarest Tablet,Anti-Cold Tablet,123,Tablet,Combination,Cipla
+Vicks Action 500 Tablet,Anti-Cold Tablet,64,Tablet,Combination,P&G
+Solvin Cold Tablet,Anti-Cold Tablet,69,Tablet,Combination,IPCA
+Sumocold Tablet,Anti-Cold Tablet,41,Tablet,Combination,Sun Pharma
+Flucold Tablet,Anti-Cold Tablet,46,Tablet,Combination,Alkem
+Coldaid Plus Tablet,Anti-Cold Tablet,93,Tablet,Combination,Corona
+Levocet 5mg Tablet,Anti-Allergy Tablet,45,Tablet,5mg,Levocet
+Xyzal 5mg Tablet,Anti-Allergy Tablet,165,Tablet,5mg,UCB
+Alerid 10mg Tablet,Anti-Allergy Tablet,30,Tablet,10mg,Cipla
+Allegra 120mg Tablet,Anti-Allergy Tablet,200,Tablet,120mg,Sanofi
+Teczine 5mg Tablet,Anti-Allergy Tablet,90,Tablet,5mg,Sun Pharma
+Glencet 5mg Tablet,Anti-Allergy Tablet,35,Tablet,5mg,Glenmark
+Cetirizine 10mg Tablet,Anti-Allergy Tablet,25,Tablet,10mg,Generic
+Lorfast 10mg Tablet,Anti-Allergy Tablet,60,Tablet,10mg,Lupin
+Montair LC Tablet,Anti-Allergy Tablet,150,Tablet,Combination,Cipla
+Montek LC Tablet,Anti-Allergy Tablet,170,Tablet,Combination,Sun Pharma
