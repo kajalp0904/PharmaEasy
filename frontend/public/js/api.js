@@ -4,7 +4,7 @@
  */
 
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_BASE = isLocalhost ? 'http://localhost:5000/api' : 'https://pharmaeasy-backend-5ht5.onrender.com/api';
+const API_BASE = isLocalhost ? 'http://localhost:5000/api' : '/api';
 
 /**
  * Display notification to user
