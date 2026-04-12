@@ -12,83 +12,72 @@ let activeAlerts = {
 
 // ============ REAL-TIME ALERT CHECKING ============
 async function checkAlertsRealTime() {
-  console.log('🔔 Checking alerts in real-time...');
-  
   try {
     const Medicine = mongoose.model('Medicine');
     const Batch = mongoose.model('Batch');
     
     const now = new Date();
-    const thirtyDaysFromNow = new Date(now);
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
     
     // Reset alerts
-    activeAlerts = {
-      lowStock: [],
-      expiringSoon: [],
-      expired: []
-    };
+    activeAlerts = { lowStock: [], expiringSoon: [], expired: [] };
     
-    // 1. Check LOW STOCK (real data from database)
-    const allMedicines = await Medicine.find({});
+    // ⚡ OPTIMIZED: Only 2 database queries instead of 134+
+    const [allMedicines, allBatches] = await Promise.all([
+      Medicine.find({}).lean(),
+      Batch.find({ quantity: { $gt: 0 } }).lean()
+    ]);
     
-    for (const medicine of allMedicines) {
-      // Get all batches for this medicine
-      const medicineBatches = await Batch.find({ 
-        medicine: medicine._id,
-        quantity: { $gt: 0 }
-      });
+    // Build a medicine lookup map by ID
+    const medMap = {};
+    for (const med of allMedicines) {
+      medMap[med._id.toString()] = med;
+    }
+    
+    // Process all batches in memory (no extra DB calls)
+    for (const batch of allBatches) {
+      const medicine = medMap[batch.medicine?.toString()];
+      if (!medicine) continue;
       
-      // Check each batch against medicine's minimumStock
-      for (const batch of medicineBatches) {
-        if (batch.quantity < medicine.minimumStock) {
-          activeAlerts.lowStock.push({
+      // LOW STOCK check
+      if (batch.quantity < medicine.minimumStock) {
+        activeAlerts.lowStock.push({
+          medicine: medicine.name,
+          batchNumber: batch.batchNumber,
+          location: batch.location,
+          currentQuantity: batch.quantity,
+          minimumStock: medicine.minimumStock,
+          deficit: medicine.minimumStock - batch.quantity,
+          medicineId: medicine._id,
+          batchId: batch._id,
+          price: medicine.price,
+          category: medicine.category
+        });
+      }
+      
+      // EXPIRY check
+      if (batch.expiryDate) {
+        const daysToExpiry = Math.ceil((new Date(batch.expiryDate) - now) / (1000 * 60 * 60 * 24));
+        
+        if (daysToExpiry <= 30 && daysToExpiry > 0) {
+          activeAlerts.expiringSoon.push({
             medicine: medicine.name,
             batchNumber: batch.batchNumber,
             location: batch.location,
-            currentQuantity: batch.quantity,
-            minimumStock: medicine.minimumStock,
-            deficit: medicine.minimumStock - batch.quantity,
-            medicineId: medicine._id,
-            batchId: batch._id,
-            price: medicine.price,
-            category: medicine.category
-          });
-        }
-      }
-    }
-    
-    // 2. Check EXPIRING SOON (real batches from database)
-    const batches = await Batch.find({
-      quantity: { $gt: 0 }
-    }).populate('medicine', 'name price');
-    
-    for (const batch of batches) {
-      if (batch.expiryDate) {
-        const daysToExpiry = Math.ceil((batch.expiryDate - now) / (1000 * 60 * 60 * 24));
-        
-        // Expiring in next 30 days
-        if (daysToExpiry <= 30 && daysToExpiry > 0) {
-          activeAlerts.expiringSoon.push({
-            medicine: batch.medicine.name,
-            batchNumber: batch.batchNumber,
-            location: batch.location,
             quantity: batch.quantity,
-            price: batch.medicine.price,
+            price: medicine.price,
             expiryDate: batch.expiryDate,
             daysLeft: daysToExpiry,
             batchId: batch._id
           });
         }
         
-        // Already expired
         if (daysToExpiry <= 0) {
           activeAlerts.expired.push({
-            medicine: batch.medicine.name,
+            medicine: medicine.name,
             batchNumber: batch.batchNumber,
             location: batch.location,
             quantity: batch.quantity,
-            price: batch.medicine.price,
+            price: medicine.price,
             expiryDate: batch.expiryDate,
             daysExpired: Math.abs(daysToExpiry),
             batchId: batch._id
@@ -96,8 +85,6 @@ async function checkAlertsRealTime() {
         }
       }
     }
-    
-    console.log(`📊 Real-time alerts: Low stock: ${activeAlerts.lowStock.length}, Expiring: ${activeAlerts.expiringSoon.length}, Expired: ${activeAlerts.expired.length}`);
     
     return activeAlerts;
     
@@ -168,45 +155,32 @@ router.get("/dashboard", auth, async (req, res) => {
       batches,
       freeLocations,
       recentBills,
-      lowStockMedicines
+      lowStockMedicines,
+      expiringBatches,
+      todayBills,
+      stockValueResult
     ] = await Promise.all([
       Medicine.countDocuments(),
       Batch.countDocuments(),
       Location.countDocuments({ isOccupied: false }),
-      Bill.find().sort({ createdAt: -1 }).limit(10),
+      Bill.find().sort({ createdAt: -1 }).limit(10).lean(),
       Medicine.find({
         $expr: { $lt: ["$totalStock", "$minimumStock"] }
-      })
+      }).lean(),
+      Batch.find({
+        expiryDate: { $lte: new Date(Date.now() + 30*86400000), $gt: new Date() },
+        quantity: { $gt: 0 }
+      }).populate('medicine', 'name').limit(10).lean(),
+      Bill.find({ createdAt: { $gte: new Date(new Date().setHours(0,0,0,0)) } }).lean(),
+      Batch.aggregate([
+        { $match: { quantity: { $gt: 0 } } },
+        { $lookup: { from: 'medicines', localField: 'medicine', foreignField: '_id', as: 'med' } },
+        { $unwind: { path: '$med', preserveNullAndEmptyArrays: true } },
+        { $group: { _id: null, total: { $sum: { $multiply: ['$quantity', { $ifNull: ['$med.price', 0] }] } } } }
+      ])
     ]);
     
-    // Calculate expiring batches
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    
-    const expiringBatches = await Batch.find({
-      expiryDate: { 
-        $lte: thirtyDaysFromNow,
-        $gt: new Date()
-      },
-      quantity: { $gt: 0 }
-    }).populate('medicine', 'name').limit(10);
-    
-    // Calculate total value of stock
-    const allBatches = await Batch.find({ quantity: { $gt: 0 } })
-      .populate('medicine', 'name price');
-    
-    const stockValue = allBatches.reduce((total, batch) => {
-      return total + (batch.quantity * (batch.medicine?.price || 0));
-    }, 0);
-    
-    // Calculate today's sales
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const todayBills = await Bill.find({
-      createdAt: { $gte: today }
-    });
-    
+    const stockValue = stockValueResult[0]?.total || 0;
     const todaySales = todayBills.reduce((total, bill) => total + (bill.totalAmount || 0), 0);
     
     res.json({
