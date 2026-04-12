@@ -32,10 +32,9 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+    if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('onrender.com') || origin === process.env.FRONTEND_URL) {
       return callback(null, true);
     }
-    if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true
