@@ -143,6 +143,48 @@ app.use(express.static(path.join(__dirname, '../frontend/public'), {
   }
 }));
 
+app.get("/api/force-upload", async (req, res) => {
+  const fs = require('fs');
+  const csv = require('csv-parser');
+  const path = require('path');
+  const Medicine = mongoose.model('Medicine');
+  const Batch = mongoose.model('Batch');
+  const results = [];
+  try {
+    fs.createReadStream(path.join(__dirname, 'real-medicines.csv'))
+      .pipe(csv())
+      .on('data', (data) => results.push(data))
+      .on('end', async () => {
+        let added = 0;
+        for (let row of results) {
+          if (!row.medicine_name && !row.name) continue;
+          let med = await Medicine.findOne({ name: row.medicine_name || row.name });
+          if (!med) {
+             med = new Medicine({
+               name: row.medicine_name || row.name,
+               manufacturer: row.manufacturer || 'Unknown',
+               stockLimit: parseInt(row.stock_limit) || 20
+             });
+             await med.save();
+             const batch = new Batch({
+               medicine: med._id,
+               quantity: parseInt(row.quantity) || parseInt(row.initial_stock) || 50,
+               price: parseFloat(row.price) || 15.00,
+               expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+             });
+             await batch.save();
+             med.totalStock += batch.quantity;
+             await med.save();
+             added++;
+          }
+        }
+        res.json({ success: true, count: added, totalCsv: results.length });
+      });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
 // SPA fallback
 app.use((req, res, next) => {
   if (!req.path.startsWith('/api')) {
