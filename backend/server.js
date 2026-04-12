@@ -143,43 +143,84 @@ app.use(express.static(path.join(__dirname, '../frontend/public'), {
   }
 }));
 
-app.get("/api/force-upload", async (req, res) => {
-  const fs = require('fs');
-  const csv = require('csv-parser');
-  const path = require('path');
-  const Medicine = mongoose.model('Medicine');
-  const Batch = mongoose.model('Batch');
-  const results = [];
+// Full database reset endpoint (wipe medicines, batches, locations)
+app.get("/api/full-reset", async (req, res) => {
   try {
-    fs.createReadStream(path.join(__dirname, 'real-medicines.csv'))
-      .pipe(csv())
-      .on('data', (data) => results.push(data))
-      .on('end', async () => {
-        let added = 0;
-        for (let row of results) {
-          if (!row.medicine_name && !row.name) continue;
-          let med = await Medicine.findOne({ name: row.medicine_name || row.name });
-          if (!med) {
-             med = new Medicine({
-               name: row.medicine_name || row.name,
-               manufacturer: row.manufacturer || 'Unknown',
-               stockLimit: parseInt(row.stock_limit) || 20
-             });
-             await med.save();
-             const batch = new Batch({
-               medicine: med._id,
-               quantity: parseInt(row.quantity) || parseInt(row.initial_stock) || 50,
-               price: parseFloat(row.price) || 15.00,
-               expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
-             });
-             await batch.save();
-             med.totalStock += batch.quantity;
-             await med.save();
-             added++;
+    const Medicine = mongoose.model('Medicine');
+    const Batch = mongoose.model('Batch');
+    const Location = mongoose.model('Location');
+
+    const medCount = await Medicine.countDocuments();
+    const batchCount = await Batch.countDocuments();
+    const locCount = await Location.countDocuments();
+
+    await Medicine.deleteMany({});
+    await Batch.deleteMany({});
+    await Location.deleteMany({});
+
+    res.json({
+      success: true,
+      message: 'Full reset complete',
+      deleted: { medicines: medCount, batches: batchCount, locations: locCount }
+    });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
+// Auto-cleanup: Delete zero-stock medicines and free their locations
+app.post("/api/cleanup-zero-stock", async (req, res) => {
+  try {
+    const Medicine = mongoose.model('Medicine');
+    const Batch = mongoose.model('Batch');
+    const Location = mongoose.model('Location');
+
+    const zeroStockMeds = await Medicine.find({ totalStock: 0 });
+    let deletedCount = 0;
+    let freedLocations = 0;
+
+    for (const med of zeroStockMeds) {
+      // Find and delete all batches for this medicine
+      const batches = await Batch.find({ medicine: med._id });
+      for (const batch of batches) {
+        // Free the location assigned to this batch
+        const loc = await Location.findOne({ currentBatchId: batch._id.toString() });
+        if (loc) {
+          loc.isOccupied = false;
+          loc.currentBatchId = null;
+          loc.medicineName = '';
+          loc.batchNumber = '';
+          loc.quantity = 0;
+          loc.expiryDate = null;
+          await loc.save();
+          freedLocations++;
+        }
+        // Also check by location code on the batch
+        if (batch.location) {
+          const locByCode = await Location.findOne({ code: batch.location, isOccupied: true });
+          if (locByCode && locByCode.medicineName === med.name) {
+            locByCode.isOccupied = false;
+            locByCode.currentBatchId = null;
+            locByCode.medicineName = '';
+            locByCode.batchNumber = '';
+            locByCode.quantity = 0;
+            locByCode.expiryDate = null;
+            await locByCode.save();
+            freedLocations++;
           }
         }
-        res.json({ success: true, count: added, totalCsv: results.length });
-      });
+        await batch.deleteOne();
+      }
+      await med.deleteOne();
+      deletedCount++;
+    }
+
+    res.json({
+      success: true,
+      message: `Cleaned up ${deletedCount} zero-stock medicines, freed ${freedLocations} locations`,
+      deletedMedicines: deletedCount,
+      freedLocations
+    });
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
