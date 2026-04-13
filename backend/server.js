@@ -131,16 +131,11 @@ mongoose.connection.once('open', async () => {
   }
 });
 
-// Static file serving - NO CACHING during development to fix sync issues
+// Static file serving - ENABLE CACHING for improved performance
 app.use(express.static(path.join(__dirname, '../frontend/public'), {
-  etag: false,
-  lastModified: false,
-  setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('Surrogate-Control', 'no-store');
-  }
+  maxAge: '1d', // Cache for 1 day
+  etag: true,
+  lastModified: true
 }));
 
 // Full database reset endpoint (wipe medicines, batches, locations)

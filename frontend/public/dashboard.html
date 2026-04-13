@@ -93,140 +93,43 @@
         </div>
     </div>
 
-    <!-- React 18 via CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- ==================== REACT: DASHBOARD STATS CARDS ==================== -->
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // ==================== StatCard Component ====================
-        // Reusable card with props for label, value, color, link, and loading state
-        function StatCard({ label, value, color, link, isLoading }) {
-            const [isHovered, setIsHovered] = useState(false);
-
-            const cardStyle = {
-                background: 'white',
-                borderRadius: '8px',
-                padding: '18px 24px',
-                flex: 1,
-                minWidth: '150px',
-                boxShadow: isHovered 
-                    ? '0 8px 16px rgba(0,0,0,0.12)' 
-                    : '0 2px 6px rgba(0,0,0,0.06)',
-                cursor: 'pointer',
-                transition: 'all 0.25s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-                transform: isHovered ? 'translateY(-4px)' : 'none',
-                borderBottom: isHovered ? `3px solid ${color}` : '3px solid transparent'
-            };
-
-            return (
-                <div
-                    style={cardStyle}
-                    onClick={() => window.location.href = link}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                >
-                    <span style={{ fontSize: '13px', color: '#7a7a7a' }}>{label}</span>
-                    <span style={{
-                        fontSize: '28px',
-                        fontWeight: 700,
-                        color: color,
-                        transition: 'all 0.3s ease'
-                    }}>
-                        {isLoading ? (
-                            <span style={{ 
-                                display: 'inline-block', 
-                                animation: 'pulse 1.5s infinite',
-                                opacity: 0.5 
-                            }}>—</span>
-                        ) : (
-                            value
-                        )}
-                    </span>
-                </div>
-            );
+    <!-- ==================== VANILLA JS: DASHBOARD STATS CARDS ==================== -->
+    <script>
+        async function loadDashboardStats() {
+            const root = document.getElementById('react-stats-root');
+            root.innerHTML = '<div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap"><div class="stat-card" style="width:100%;text-align:center;justify-content:center;color:#7a7a7a;">Loading data...</div></div>';
+            
+            try {
+                const data = await apiCall('/dashboard');
+                const stats = data && data.summary ? data.summary : {};
+                
+                const cards = [
+                    { label: 'Total Medicines', value: stats.totalMedicines ?? 0, color: '#2d2d2d', link: 'medicines.html' },
+                    { label: 'Low Stock Alerts', value: stats.lowStockAlerts ?? 0, color: '#c62828', link: 'alerts.html' },
+                    { label: 'Expiring Soon', value: stats.expiringSoon ?? 0, color: '#e65100', link: 'alerts.html' },
+                    { label: "Today's Bills", value: stats.todayTransactions ?? 0, color: '#2e7d32', link: 'billing-history.html' }
+                ];
+                
+                let statsHtml = '<div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;flex:1;width:100%">';
+                cards.forEach(card => {
+                    statsHtml += `
+                        <div class="stat-card" style="border-left-color: ${card.color}; cursor:pointer; flex: 1; min-width: 150px;" onclick="location.href='${card.link}'">
+                            <div class="stat-body">
+                                <span class="stat-label">${card.label}</span>
+                                <span class="stat-value" style="color: ${card.color}">${card.value}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                statsHtml += '</div>';
+                root.innerHTML = statsHtml;
+            } catch (e) {
+                console.error('Dashboard stats error:', e);
+                root.innerHTML = '<div class="stat-card" style="border-left-color: #f44336; width:100%;"><div class="stat-body"><span class="stat-label">Error</span><span class="stat-value" style="color:#c62828; font-size: 16px;">Failed to load stats</span></div></div>';
+            }
         }
-
-        // ==================== StatsRow Component ====================
-        // Fetches dashboard data and renders all stat cards
-        function StatsRow() {
-            const [stats, setStats] = useState(null);
-            const [isLoading, setIsLoading] = useState(true);
-
-            useEffect(() => {
-                async function loadStats() {
-                    try {
-                        const data = await apiCall('/dashboard');
-                        if (data && data.summary) {
-                            setStats(data.summary);
-                        }
-                    } catch (e) {
-                        console.error('Dashboard stats error:', e);
-                    } finally {
-                        setIsLoading(false);
-                    }
-                }
-                loadStats();
-            }, []);
-
-            // Card configurations - easy to add/remove cards
-            const cards = [
-                {
-                    label: 'Total Medicines',
-                    value: stats?.totalMedicines ?? 0,
-                    color: '#2d2d2d',
-                    link: 'medicines.html'
-                },
-                {
-                    label: 'Low Stock Alerts',
-                    value: stats?.lowStockAlerts ?? 0,
-                    color: '#c62828',
-                    link: 'alerts.html'
-                },
-                {
-                    label: 'Expiring Soon',
-                    value: stats?.expiringSoon ?? 0,
-                    color: '#e65100',
-                    link: 'alerts.html'
-                },
-                {
-                    label: "Today's Bills",
-                    value: stats?.todayTransactions ?? 0,
-                    color: '#2e7d32',
-                    link: 'billing-history.html'
-                }
-            ];
-
-            return (
-                <div style={{
-                    display: 'flex',
-                    gap: '16px',
-                    marginBottom: '28px',
-                    flexWrap: 'wrap'
-                }}>
-                    {cards.map((card, index) => (
-                        <StatCard
-                            key={index}
-                            label={card.label}
-                            value={card.value}
-                            color={card.color}
-                            link={card.link}
-                            isLoading={isLoading}
-                        />
-                    ))}
-                </div>
-            );
-        }
-
-        // ==================== MOUNT REACT STATS ====================
-        const root = ReactDOM.createRoot(document.getElementById('react-stats-root'));
-        root.render(<StatsRow />);
+        
+        loadDashboardStats();
     </script>
 
     <!-- ==================== VANILLA JS: SEARCH (unchanged) ==================== -->

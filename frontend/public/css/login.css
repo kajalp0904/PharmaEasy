@@ -12,7 +12,7 @@
     background: white;
     padding: 40px;
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(255,107,53,0.1);
+    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.1);
     border: 1px solid var(--border-color);
 }
 
@@ -52,7 +52,7 @@
 
 .form-group input:focus {
     border-color: var(--orange);
-    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
 }
 
 .btn-login {
@@ -102,6 +102,6 @@
     width: 100%;
     max-width: 400px;
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(255,107,53,0.15);
+    box-shadow: 0 20px 40px rgba(255, 107, 53, 0.15);
     border: 3px solid var(--orange);
 }

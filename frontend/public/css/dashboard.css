@@ -97,7 +97,7 @@ body {
 .logout-btn:hover {
     background-color: #ff5722;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(255,107,53,0.2);
+    box-shadow: 0 4px 8px rgba(255, 107, 53, 0.2);
 }
 
 /* ===== QUICK ACTIONS ===== */
@@ -193,7 +193,7 @@ body {
 .empty-state-btn:hover {
     background-color: #ff5722;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(255,107,53,0.2);
+    box-shadow: 0 4px 8px rgba(255, 107, 53, 0.2);
 }
 
 /* ===== MEDICINE SEARCH SECTION ===== */
@@ -237,7 +237,7 @@ body {
     outline: none;
     border-color: #ff6b35;
     background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
 }
 
 .search-btn {
@@ -258,7 +258,7 @@ body {
 .search-btn:hover {
     background-color: #ff5722;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(255,107,53,0.2);
+    box-shadow: 0 4px 8px rgba(255, 107, 53, 0.2);
 }
 
 /* ===== SEARCH RESULTS ===== */
@@ -423,7 +423,7 @@ body {
     overflow-y: auto;
     z-index: 1000;
     display: none;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .suggestions-dropdown.active {
@@ -466,10 +466,15 @@ body {
 }
 
 @media (max-width: 900px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
+
 @media (max-width: 500px) {
-    .stats-grid { grid-template-columns: 1fr; }
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .stat-card {
@@ -479,19 +484,26 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
     border-left: 4px solid #e0e0e0;
     transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-.stat-icon { font-size: 30px; line-height: 1; }
+.stat-icon {
+    font-size: 30px;
+    line-height: 1;
+}
 
-.stat-body { display: flex; flex-direction: column; gap: 3px; }
+.stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
 
 .stat-value {
     font-size: 28px;
@@ -507,14 +519,29 @@ body {
 }
 
 /* Variants */
-.stat-warning { border-left-color: #ff9800; }
-.stat-warning .stat-value { color: #e65100; }
+.stat-warning {
+    border-left-color: #ff9800;
+}
 
-.stat-danger  { border-left-color: #f44336; }
-.stat-danger  .stat-value { color: #c62828; }
+.stat-warning .stat-value {
+    color: #e65100;
+}
 
-.stat-success { border-left-color: #4caf50; }
-.stat-success .stat-value { color: #2e7d32; }
+.stat-danger {
+    border-left-color: #f44336;
+}
+
+.stat-danger .stat-value {
+    color: #c62828;
+}
+
+.stat-success {
+    border-left-color: #4caf50;
+}
+
+.stat-success .stat-value {
+    color: #2e7d32;
+}
 
 /* Pulsing glow when alert is active (lowStock or expiring > 0) */
 .stat-warning.stat-active,
@@ -523,6 +550,13 @@ body {
 }
 
 @keyframes pulse-card {
-    0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-    50%       { box-shadow: 0 4px 16px rgba(255,107,53,0.3); }
-}
+
+    0%,
+    100% {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    }
+
+    50% {
+        box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+    }
+}
