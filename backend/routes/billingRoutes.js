@@ -145,4 +145,25 @@ router.get("/bills", auth, async (req, res) => {
   }
 });
 
+// Get a single bill by billNumber or ID
+router.get("/bills/:id", auth, async (req, res) => {
+  try {
+    const param = req.params.id;
+    let bill = await Bill.findOne({ billNumber: param });
+    
+    // Fallback if the user passes the MongoDB _id
+    if (!bill && param.match(/^[0-9a-fA-F]{24}$/)) {
+      bill = await Bill.findById(param);
+    }
+
+    if (!bill) {
+      return res.status(404).json({ success: false, message: "Bill not found" });
+    }
+
+    res.json({ success: true, bill });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

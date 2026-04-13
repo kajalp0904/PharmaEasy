@@ -8,6 +8,7 @@
     <!-- PDF generation libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="js/api.js"></script>
 </head>
 <body>
     <div class="container">
@@ -117,18 +118,19 @@
             return urlParams.get(name);
         }
 
-        function loadBillData() {
+        async function loadBillData() {
             const billId = getUrlParameter('id');
             
             if (billId) {
+                // First check demo data
                 if (exampleBills[billId]) {
                     displayBillData(exampleBills[billId]);
                     return;
                 }
                 
+                // Show loading state
                 document.getElementById('billId').textContent = billId;
                 document.getElementById('billDate').textContent = 'Loading...';
-                
                 document.getElementById('itemsTableBody').innerHTML = `
                     <tr>
                         <td colspan="4" style="text-align: center; padding: 40px;">
@@ -136,6 +138,44 @@
                         </td>
                     </tr>
                 `;
+
+                // Try fetching from server
+                try {
+                    const response = await apiCall(`/bills/${encodeURIComponent(billId)}`);
+                    if (response && response.success && response.bill) {
+                        const b = response.bill;
+                        
+                        // Calculate tax automatically for display (5% assumed previously)
+                        const subtotal = b.items.reduce((sum, item) => sum + item.price, 0);
+                        const tax = subtotal * 0.05;
+
+                        // Format date
+                        const d = new Date(b.createdAt);
+                        const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + 
+                                        d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                        displayBillData({
+                            billId: b.billNumber,
+                            date: dateStr,
+                            items: b.items.map(i => ({
+                                name: i.medicineName,
+                                quantity: i.quantitySold,
+                                price: i.price / i.quantitySold
+                            })),
+                            subtotal: subtotal,
+                            tax: tax,
+                            total: b.totalAmount
+                        });
+                    } else {
+                        document.getElementById('billDate').textContent = 'Error';
+                        document.getElementById('itemsTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Bill not found.</td></tr>`;
+                    }
+                } catch (err) {
+                    console.error("Error fetching bill:", err);
+                    document.getElementById('billDate').textContent = 'Error';
+                    document.getElementById('itemsTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Failed to load bill.</td></tr>`;
+                }
+
             } else {
                 const sessionBill = sessionStorage.getItem('currentBill');
                 if (sessionBill) {
