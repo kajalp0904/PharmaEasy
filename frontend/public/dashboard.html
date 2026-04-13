@@ -24,7 +24,6 @@
                 <a href="billing-history.html" class="nav-item">Billing History</a>
                 <a href="alerts.html" class="nav-item">Low Stock</a>
                 <a href="alerts.html" class="nav-item">Expiry Alerts</a>
-                <!-- <a href="#" class="nav-item">Restock</a>-->
             </nav>
         </div>
 
@@ -35,33 +34,8 @@
                 <button id="logoutBtn" class="logout-btn" onclick="logout()">Logout</button>
             </div>
 
-            <!-- ===== LIVE STATS CARDS ===== -->
-            <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
-                <div onclick="location.href='medicines.html'"
-                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
-                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-                    <span style="font-size:13px; color:#7a7a7a;">Total Medicines</span>
-                    <span id="statMedicines" style="font-size:28px; font-weight:700; color:#2d2d2d;">—</span>
-                </div>
-                <div onclick="location.href='alerts.html'"
-                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
-                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-                    <span style="font-size:13px; color:#7a7a7a;">Low Stock Alerts</span>
-                    <span id="statLowStock" style="font-size:28px; font-weight:700; color:#c62828;">—</span>
-                </div>
-                <div onclick="location.href='alerts.html'"
-                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
-                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-                    <span style="font-size:13px; color:#7a7a7a;">Expiring Soon</span>
-                    <span id="statExpiring" style="font-size:28px; font-weight:700; color:#e65100;">—</span>
-                </div>
-                <div onclick="location.href='billing-history.html'"
-                    style="background:white; border-radius:8px; padding:18px 24px; flex:1; min-width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer; transition:transform 0.15s; display:flex; flex-direction:column; gap:4px;"
-                    onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-                    <span style="font-size:13px; color:#7a7a7a;">Today's Bills</span>
-                    <span id="statBills" style="font-size:28px; font-weight:700; color:#2e7d32;">—</span>
-                </div>
-            </div>
+            <!-- ===== REACT: LIVE STATS CARDS ===== -->
+            <div id="react-stats-root"></div>
 
             <!-- ===== LIVE MEDICINE SEARCH WITH AUTOCOMPLETE ===== -->
 
@@ -106,23 +80,9 @@
                         <div class="quick-action-desc">Create invoice</div>
                     </div>
                 </div>
-                <!--<div class="quick-action-card">
-                    <div class="quick-action-icon">📊</div>
-                    <div>
-                        <div class="quick-action-title">View Reports</div>
-                        <div class="quick-action-desc">Sales analytics</div>
-                    </div>
-                </div>
-                <div class="quick-action-card">
-                    <div class="quick-action-icon">📦</div>
-                    <div>
-                        <div class="quick-action-title">Restock</div>
-                        <div class="quick-action-desc">Order medicines</div>
-                    </div>
-                </div>-->
             </div>
 
-            <!-- RECENT MEDICINES – EMPTY STATE (no medicines added yet) -->
+            <!-- RECENT MEDICINES -->
             <h2 class="section-title">Om Medical</h2>
             <div class="empty-state">
                 <div class="empty-state-icon">💊</div>
@@ -133,6 +93,143 @@
         </div>
     </div>
 
+    <!-- React 18 via CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- ==================== REACT: DASHBOARD STATS CARDS ==================== -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // ==================== StatCard Component ====================
+        // Reusable card with props for label, value, color, link, and loading state
+        function StatCard({ label, value, color, link, isLoading }) {
+            const [isHovered, setIsHovered] = useState(false);
+
+            const cardStyle = {
+                background: 'white',
+                borderRadius: '8px',
+                padding: '18px 24px',
+                flex: 1,
+                minWidth: '150px',
+                boxShadow: isHovered 
+                    ? '0 8px 16px rgba(0,0,0,0.12)' 
+                    : '0 2px 6px rgba(0,0,0,0.06)',
+                cursor: 'pointer',
+                transition: 'all 0.25s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                transform: isHovered ? 'translateY(-4px)' : 'none',
+                borderBottom: isHovered ? `3px solid ${color}` : '3px solid transparent'
+            };
+
+            return (
+                <div
+                    style={cardStyle}
+                    onClick={() => window.location.href = link}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <span style={{ fontSize: '13px', color: '#7a7a7a' }}>{label}</span>
+                    <span style={{
+                        fontSize: '28px',
+                        fontWeight: 700,
+                        color: color,
+                        transition: 'all 0.3s ease'
+                    }}>
+                        {isLoading ? (
+                            <span style={{ 
+                                display: 'inline-block', 
+                                animation: 'pulse 1.5s infinite',
+                                opacity: 0.5 
+                            }}>—</span>
+                        ) : (
+                            value
+                        )}
+                    </span>
+                </div>
+            );
+        }
+
+        // ==================== StatsRow Component ====================
+        // Fetches dashboard data and renders all stat cards
+        function StatsRow() {
+            const [stats, setStats] = useState(null);
+            const [isLoading, setIsLoading] = useState(true);
+
+            useEffect(() => {
+                async function loadStats() {
+                    try {
+                        const data = await apiCall('/dashboard');
+                        if (data && data.summary) {
+                            setStats(data.summary);
+                        }
+                    } catch (e) {
+                        console.error('Dashboard stats error:', e);
+                    } finally {
+                        setIsLoading(false);
+                    }
+                }
+                loadStats();
+            }, []);
+
+            // Card configurations - easy to add/remove cards
+            const cards = [
+                {
+                    label: 'Total Medicines',
+                    value: stats?.totalMedicines ?? 0,
+                    color: '#2d2d2d',
+                    link: 'medicines.html'
+                },
+                {
+                    label: 'Low Stock Alerts',
+                    value: stats?.lowStockAlerts ?? 0,
+                    color: '#c62828',
+                    link: 'alerts.html'
+                },
+                {
+                    label: 'Expiring Soon',
+                    value: stats?.expiringSoon ?? 0,
+                    color: '#e65100',
+                    link: 'alerts.html'
+                },
+                {
+                    label: "Today's Bills",
+                    value: stats?.todayTransactions ?? 0,
+                    color: '#2e7d32',
+                    link: 'billing-history.html'
+                }
+            ];
+
+            return (
+                <div style={{
+                    display: 'flex',
+                    gap: '16px',
+                    marginBottom: '28px',
+                    flexWrap: 'wrap'
+                }}>
+                    {cards.map((card, index) => (
+                        <StatCard
+                            key={index}
+                            label={card.label}
+                            value={card.value}
+                            color={card.color}
+                            link={card.link}
+                            isLoading={isLoading}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        // ==================== MOUNT REACT STATS ====================
+        const root = ReactDOM.createRoot(document.getElementById('react-stats-root'));
+        root.render(<StatsRow />);
+    </script>
+
+    <!-- ==================== VANILLA JS: SEARCH (unchanged) ==================== -->
     <script>
         // ========== AUTHENTICATION CHECK ==========
         requireAuth();
@@ -277,9 +374,8 @@
             }
         }
 
-        // ========== DISPLAY MEDICINE DETAILS – HIDE ZERO VALUES & NO "undefined" ==========
+        // ========== DISPLAY MEDICINE DETAILS ==========
         function displayMedicineDetails(medicine, batches) {
-            // Filter out batches with quantity 0
             const activeBatches = batches.filter(batch => batch.quantity > 0);
 
             const totalStock = medicine.totalStock || 0;
@@ -288,7 +384,6 @@
             const stockStatus = totalStock < minStock ? 'Low Stock' : 'Good';
             const statusClass = totalStock < minStock ? 'badge-low' : 'badge-good';
 
-            // Build medicine details grid items only if values are > 0
             let detailsHtml = '';
             if (price > 0) {
                 detailsHtml += `
@@ -314,7 +409,6 @@
                     </div>
                 `;
             }
-            // Always show active batches count
             detailsHtml += `
                 <div class="detail-item">
                     <span class="detail-label">Active Batches</span>
@@ -322,7 +416,6 @@
                 </div>
             `;
 
-            // Batch rows HTML (only for active batches)
             let batchesHtml = '';
             if (activeBatches.length === 0) {
                 batchesHtml = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No active batches found for this medicine.</td></tr>`;
@@ -416,34 +509,6 @@
         searchInput.addEventListener('input', function () {
             selectedMedicineId = null;
         });
-
-        // ========== DASHBOARD STATS ==========
-        async function loadDashboardStats() {
-            try {
-                const data = await apiCall('/dashboard');
-                if (!data || !data.summary) return;
-
-                const s = data.summary;
-
-                document.getElementById('statMedicines').textContent = s.totalMedicines ?? '0';
-                document.getElementById('statLowStock').textContent = s.lowStockAlerts ?? '0';
-                document.getElementById('statExpiring').textContent = s.expiringSoon ?? '0';
-                document.getElementById('statBills').textContent = s.todayTransactions ?? '0';
-
-                // Highlight warning cards if values are > 0
-                if ((s.lowStockAlerts ?? 0) > 0) {
-                    document.querySelector('.stat-warning').classList.add('stat-active');
-                }
-                if ((s.expiringSoon ?? 0) > 0) {
-                    document.querySelector('.stat-danger').classList.add('stat-active');
-                }
-            } catch (e) {
-                // Fail silently — stats are informational only
-            }
-        }
-
-        // Load stats on page load
-        window.addEventListener('DOMContentLoaded', loadDashboardStats);
     </script>
 
 </body>

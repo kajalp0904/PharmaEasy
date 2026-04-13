@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Om Medical - Alerts</title>
+    <title>Om Medical - Alerts (React)</title>
     <link rel="stylesheet" href="css/alerts.css">
 </head>
 <body>
     <div class="container">
-        <!-- SIDEBAR (DARK) -->
+        <!-- SIDEBAR (stays static HTML - no need for React here) -->
         <div class="sidebar">
             <div class="sidebar-logo">
                 <h1>Om Medical</h1>
@@ -20,217 +20,276 @@
                 <a href="generate-bill.html" class="nav-item">Generate Bill</a>
                 <a href="billing-history.html" class="nav-item">Billing History</a>
                 <a href="alerts.html" class="nav-item active">Alerts</a>
-                
             </nav>
         </div>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN CONTENT - REACT MOUNTS HERE -->
         <div class="main-content">
-            <div class="header">
-                <h2>Alerts & Notifications</h2>
-                <button class="refresh-btn" id="refreshBtn" onclick="loadAlerts()">
-                    🔄 Refresh
-                </button>
-            </div>
-
-            <!-- TABS -->
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="lowStock">
-                    Low Stock <span class="badge" id="lowStockBadge">0</span>
-                </button>
-                <button class="tab-btn" data-tab="expiringSoon">
-                    Expiring Soon <span class="badge" id="expiringSoonBadge">0</span>
-                </button>
-                <button class="tab-btn" data-tab="expired">
-                    Expired <span class="badge" id="expiredBadge">0</span>
-                </button>
-            </div>
-
-            <!-- TAB CONTENT -->
-            <div class="tab-content active" id="lowStockTab">
-                <div class="alert-list" id="lowStockList">
-                    <div class="loading">Loading alerts...</div>
-                </div>
-            </div>
-
-            <div class="tab-content" id="expiringSoonTab">
-                <div class="alert-list" id="expiringSoonList">
-                    <div class="loading">Loading alerts...</div>
-                </div>
-            </div>
-
-            <div class="tab-content" id="expiredTab">
-                <div class="alert-list" id="expiredList">
-                    <div class="loading">Loading alerts...</div>
-                </div>
-            </div>
+            <div id="react-alerts-root"></div>
         </div>
     </div>
 
+    <!-- Load api.js first for auth & apiCall -->
     <script src="js/api.js"></script>
-    <script>
-        // Check authentication on page load
-        requireAuth();
 
-        let alertsData = null;
+    <!-- React 18 via CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-        // ========== LOAD ALERTS FROM BACKEND ==========
-        async function loadAlerts() {
-            try {
-                const refreshBtn = document.getElementById('refreshBtn');
-                refreshBtn.disabled = true;
-                refreshBtn.textContent = '⏳ Loading...';
+    <!-- ==================== REACT COMPONENTS ==================== -->
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
 
-                const response = await apiCall('/alerts', { method: 'GET' });
-                alertsData = response.alerts;
-
-                // Update badges
-                document.getElementById('lowStockBadge').textContent = response.counts.lowStock;
-                document.getElementById('expiringSoonBadge').textContent = response.counts.expiringSoon;
-                document.getElementById('expiredBadge').textContent = response.counts.expired;
-
-                // Render current tab
-                const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
-                renderAlerts(activeTab);
-
-                refreshBtn.disabled = false;
-                refreshBtn.textContent = '🔄 Refresh';
-                showNotification('Alerts refreshed successfully', 'success');
-
-            } catch (error) {
-                console.error('Error loading alerts:', error);
-                showNotification('Failed to load alerts', 'error');
-                document.getElementById('refreshBtn').disabled = false;
-                document.getElementById('refreshBtn').textContent = '🔄 Refresh';
-            }
+        // ==================== Badge Component ====================
+        function Badge({ count, color = '#ff6b35' }) {
+            return (
+                <span style={{
+                    display: 'inline-block',
+                    padding: '2px 10px',
+                    backgroundColor: color,
+                    color: 'white',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    minWidth: '24px',
+                    textAlign: 'center'
+                }}>
+                    {count}
+                </span>
+            );
         }
 
-        // ========== RENDER ALERTS FOR SPECIFIC TAB ==========
-        function renderAlerts(tabName) {
-            const listId = `${tabName}List`;
-            const listElement = document.getElementById(listId);
+        // ==================== Tab Button Component ====================
+        function TabButton({ label, count, isActive, onClick }) {
+            return (
+                <button
+                    className={`tab-btn ${isActive ? 'active' : ''}`}
+                    onClick={onClick}
+                >
+                    {label} <Badge count={count} />
+                </button>
+            );
+        }
 
-            if (!alertsData) {
-                listElement.innerHTML = '<div class="loading">Loading alerts...</div>';
-                return;
-            }
-
-            const alerts = alertsData[tabName] || [];
-
-            if (alerts.length === 0) {
-                listElement.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">✅</div>
-                        <div class="empty-state-title">No ${tabName === 'lowStock' ? 'low stock' : tabName === 'expiringSoon' ? 'expiring' : 'expired'} alerts</div>
-                        <div class="empty-state-text">Everything looks good!</div>
+        // ==================== Low Stock Alert Card ====================
+        function LowStockCard({ alert }) {
+            return (
+                <div className="alert-card low-stock">
+                    <div className="alert-icon">⚠️</div>
+                    <div className="alert-content">
+                        <div className="alert-title">{alert.medicine}</div>
+                        <div className="alert-details">
+                            <span>Batch: {alert.batchNumber}</span>
+                            <span>Location: {alert.location}</span>
+                            <span>Current: {alert.currentQuantity} units</span>
+                            <span>Minimum: {alert.minimumStock} units</span>
+                        </div>
+                        <div className="alert-deficit">Deficit: {alert.deficit} units</div>
                     </div>
-                `;
-                return;
-            }
+                </div>
+            );
+        }
 
-            // Render alerts based on type
-            let html = '';
-            alerts.forEach(alert => {
-                if (tabName === 'lowStock') {
-                    html += renderLowStockAlert(alert);
-                } else if (tabName === 'expiringSoon') {
-                    html += renderExpiringSoonAlert(alert);
-                } else if (tabName === 'expired') {
-                    html += renderExpiredAlert(alert);
+        // ==================== Expiring Soon Alert Card ====================
+        function ExpiringSoonCard({ alert }) {
+            const expiryDate = new Date(alert.expiryDate).toLocaleDateString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            });
+
+            return (
+                <div className="alert-card expiring-soon">
+                    <div className="alert-icon">⏰</div>
+                    <div className="alert-content">
+                        <div className="alert-title">{alert.medicine}</div>
+                        <div className="alert-details">
+                            <span>Batch: {alert.batchNumber}</span>
+                            <span>Location: {alert.location}</span>
+                            <span>Quantity: {alert.quantity} units</span>
+                            <span>Expiry: {expiryDate}</span>
+                        </div>
+                        <div className="alert-days">
+                            {alert.daysLeft} day{alert.daysLeft !== 1 ? 's' : ''} remaining
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ==================== Expired Alert Card ====================
+        function ExpiredCard({ alert }) {
+            const expiryDate = new Date(alert.expiryDate).toLocaleDateString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            });
+
+            return (
+                <div className="alert-card expired">
+                    <div className="alert-icon">❌</div>
+                    <div className="alert-content">
+                        <div className="alert-title">{alert.medicine}</div>
+                        <div className="alert-details">
+                            <span>Batch: {alert.batchNumber}</span>
+                            <span>Location: {alert.location}</span>
+                            <span>Quantity: {alert.quantity} units</span>
+                            <span>Expired: {expiryDate}</span>
+                        </div>
+                        <div className="alert-expired">
+                            {alert.daysExpired} day{alert.daysExpired !== 1 ? 's' : ''} ago
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ==================== Empty State Component ====================
+        function EmptyState({ tabName }) {
+            const labels = {
+                lowStock: 'low stock',
+                expiringSoon: 'expiring',
+                expired: 'expired'
+            };
+
+            return (
+                <div className="empty-state">
+                    <div className="empty-state-icon">✅</div>
+                    <div className="empty-state-title">No {labels[tabName]} alerts</div>
+                    <div className="empty-state-text">Everything looks good!</div>
+                </div>
+            );
+        }
+
+        // ==================== Loading Spinner Component ====================
+        function LoadingSpinner() {
+            return <div className="loading">⏳ Loading alerts...</div>;
+        }
+
+        // ==================== Alert List Component ====================
+        function AlertList({ alerts, tabName, isLoading }) {
+            if (isLoading) return <LoadingSpinner />;
+            if (!alerts || alerts.length === 0) return <EmptyState tabName={tabName} />;
+
+            return (
+                <div className="alert-list">
+                    {alerts.map((alert, index) => {
+                        switch (tabName) {
+                            case 'lowStock':
+                                return <LowStockCard key={alert.batchId || index} alert={alert} />;
+                            case 'expiringSoon':
+                                return <ExpiringSoonCard key={alert.batchId || index} alert={alert} />;
+                            case 'expired':
+                                return <ExpiredCard key={alert.batchId || index} alert={alert} />;
+                            default:
+                                return null;
+                        }
+                    })}
+                </div>
+            );
+        }
+
+        // ==================== MAIN APP COMPONENT ====================
+        function AlertsApp() {
+            // React State Management
+            const [activeTab, setActiveTab] = useState('lowStock');
+            const [alertsData, setAlertsData] = useState(null);
+            const [counts, setCounts] = useState({ lowStock: 0, expiringSoon: 0, expired: 0 });
+            const [isLoading, setIsLoading] = useState(true);
+            const [isRefreshing, setIsRefreshing] = useState(false);
+            const [lastUpdated, setLastUpdated] = useState(null);
+
+            // Fetch alerts from API using useCallback
+            const fetchAlerts = useCallback(async () => {
+                setIsRefreshing(true);
+                try {
+                    const response = await apiCall('/alerts', { method: 'GET' });
+                    setAlertsData(response.alerts);
+                    setCounts(response.counts);
+                    setLastUpdated(new Date());
+                } catch (error) {
+                    console.error('Error loading alerts:', error);
+                } finally {
+                    setIsLoading(false);
+                    setIsRefreshing(false);
                 }
-            });
+            }, []);
 
-            listElement.innerHTML = html;
-        }
+            // useEffect - load alerts when component mounts
+            useEffect(() => {
+                fetchAlerts();
+            }, [fetchAlerts]);
 
-        // ========== RENDER LOW STOCK ALERT ==========
-        function renderLowStockAlert(alert) {
-            return `
-                <div class="alert-card low-stock">
-                    <div class="alert-icon">⚠️</div>
-                    <div class="alert-content">
-                        <div class="alert-title">${alert.medicine}</div>
-                        <div class="alert-details">
-                            <span>Batch: ${alert.batchNumber}</span>
-                            <span>Location: ${alert.location}</span>
-                            <span>Current: ${alert.currentQuantity} units</span>
-                            <span>Minimum: ${alert.minimumStock} units</span>
+            // Tab configuration using array map pattern
+            const tabs = [
+                { key: 'lowStock', label: 'Low Stock' },
+                { key: 'expiringSoon', label: 'Expiring Soon' },
+                { key: 'expired', label: 'Expired' }
+            ];
+
+            return (
+                <React.Fragment>
+                    {/* Header */}
+                    <div className="header">
+                        <h2>Alerts & Notifications</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {lastUpdated && (
+                                <span style={{ fontSize: '12px', color: '#999' }}>
+                                    Updated: {lastUpdated.toLocaleTimeString()}
+                                </span>
+                            )}
+                            <button
+                                className="refresh-btn"
+                                onClick={fetchAlerts}
+                                disabled={isRefreshing}
+                            >
+                                {isRefreshing ? '⏳ Loading...' : '🔄 Refresh'}
+                            </button>
                         </div>
-                        <div class="alert-deficit">Deficit: ${alert.deficit} units</div>
                     </div>
-                </div>
-            `;
-        }
 
-        // ========== RENDER EXPIRING SOON ALERT ==========
-        function renderExpiringSoonAlert(alert) {
-            const expiryDate = new Date(alert.expiryDate).toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
+                    {/* Tabs - rendered with .map() */}
+                    <div className="tabs">
+                        {tabs.map(tab => (
+                            <TabButton
+                                key={tab.key}
+                                label={tab.label}
+                                count={counts[tab.key]}
+                                isActive={activeTab === tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                            />
+                        ))}
+                    </div>
 
-            return `
-                <div class="alert-card expiring-soon">
-                    <div class="alert-icon">⏰</div>
-                    <div class="alert-content">
-                        <div class="alert-title">${alert.medicine}</div>
-                        <div class="alert-details">
-                            <span>Batch: ${alert.batchNumber}</span>
-                            <span>Location: ${alert.location}</span>
-                            <span>Quantity: ${alert.quantity} units</span>
-                            <span>Expiry: ${expiryDate}</span>
+                    {/* Active Tab Content - conditional rendering */}
+                    <AlertList
+                        alerts={alertsData ? alertsData[activeTab] : []}
+                        tabName={activeTab}
+                        isLoading={isLoading}
+                    />
+
+                    {/* Summary footer */}
+                    {alertsData && (
+                        <div style={{
+                            marginTop: '20px',
+                            padding: '16px 20px',
+                            background: 'white',
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '14px',
+                            color: '#7a7a7a'
+                        }}>
+                            <span>Total Alerts: {counts.lowStock + counts.expiringSoon + counts.expired}</span>
+                            <span>⚛️ Powered by React {React.version}</span>
                         </div>
-                        <div class="alert-days">${alert.daysLeft} day${alert.daysLeft !== 1 ? 's' : ''} remaining</div>
-                    </div>
-                </div>
-            `;
+                    )}
+                </React.Fragment>
+            );
         }
 
-        // ========== RENDER EXPIRED ALERT ==========
-        function renderExpiredAlert(alert) {
-            const expiryDate = new Date(alert.expiryDate).toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
-
-            return `
-                <div class="alert-card expired">
-                    <div class="alert-icon">❌</div>
-                    <div class="alert-content">
-                        <div class="alert-title">${alert.medicine}</div>
-                        <div class="alert-details">
-                            <span>Batch: ${alert.batchNumber}</span>
-                            <span>Location: ${alert.location}</span>
-                            <span>Quantity: ${alert.quantity} units</span>
-                            <span>Expired: ${expiryDate}</span>
-                        </div>
-                        <div class="alert-expired">${alert.daysExpired} day${alert.daysExpired !== 1 ? 's' : ''} ago</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // ========== TAB SWITCHING ==========
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Remove active class from all tabs and content
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-                // Add active class to clicked tab
-                this.classList.add('active');
-                const tabName = this.dataset.tab;
-                document.getElementById(`${tabName}Tab`).classList.add('active');
-
-                // Render alerts for this tab
-                renderAlerts(tabName);
-            });
-        });
-
-        // Load alerts on page load
-        window.addEventListener('DOMContentLoaded', loadAlerts);
+        // ==================== MOUNT REACT APP ====================
+        requireAuth();
+        const root = ReactDOM.createRoot(document.getElementById('react-alerts-root'));
+        root.render(<AlertsApp />);
     </script>
 </body>
 </html>
