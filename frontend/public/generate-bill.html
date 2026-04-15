@@ -279,8 +279,7 @@ document.getElementById('generateBillBtn').addEventListener('click', async () =>
 
         // Calculate display values
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = subtotal * 0.05;
-        const total = response.totalAmount || (subtotal + tax);
+        const total = response.totalAmount || subtotal;
 
         // Generate date string
         const now = new Date();
@@ -304,7 +303,6 @@ document.getElementById('generateBillBtn').addEventListener('click', async () =>
                 price: item.price
             })),
             subtotal: subtotal,
-            tax: tax,
             total: total
         };
 

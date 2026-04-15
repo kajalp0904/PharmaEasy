@@ -73,17 +73,9 @@
 
                 <!-- Totals -->
                 <div class="totals" id="totalsSection">
-                    <div class="total-row">
-                        <span>Subtotal</span>
-                        <span id="subtotal">₹55.00</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Tax (5%)</span>
-                        <span id="tax">₹2.75</span>
-                    </div>
                     <div class="total-row grand-total">
                         <span>Total Amount</span>
-                        <span id="total">₹57.75</span>
+                        <span id="total">₹55.00</span>
                     </div>
                 </div>
 
@@ -107,8 +99,7 @@
                     { name: 'Ibuprofen 400mg', quantity: 1, price: 25.00 }
                 ],
                 subtotal: 55.00,
-                tax: 2.75,
-                total: 57.75
+                total: 55.00
             }
         };
 
@@ -145,9 +136,7 @@
                     if (response && response.success && response.bill) {
                         const b = response.bill;
                         
-                        // Calculate tax automatically for display (5% assumed previously)
                         const subtotal = b.items.reduce((sum, item) => sum + item.price, 0);
-                        const tax = subtotal * 0.05;
 
                         // Format date
                         const d = new Date(b.createdAt);
@@ -163,7 +152,6 @@
                                 price: i.price / i.quantitySold
                             })),
                             subtotal: subtotal,
-                            tax: tax,
                             total: b.totalAmount
                         });
                     } else {
@@ -201,8 +189,6 @@
                 </tr>
             `).join('');
 
-            document.getElementById('subtotal').textContent = `₹${bill.subtotal.toFixed(2)}`;
-            document.getElementById('tax').textContent = `₹${bill.tax.toFixed(2)}`;
             document.getElementById('total').textContent = `₹${bill.total.toFixed(2)}`;
         }
 
@@ -211,8 +197,6 @@
             // Gather data from DOM
             const billId = document.getElementById('billId').innerText;
             const date = document.getElementById('billDate').innerText;
-            const subtotal = document.getElementById('subtotal').innerText;
-            const tax = document.getElementById('tax').innerText;
             const total = document.getElementById('total').innerText;
 
             // Get table rows
@@ -268,8 +252,6 @@
                             {
                                 width: 'auto',
                                 stack: [
-                                    { text: `Subtotal: ${subtotal}`, alignment: 'right' },
-                                    { text: `Tax (5%): ${tax}`, alignment: 'right' },
                                     { text: `Total: ${total}`, alignment: 'right', bold: true, fontSize: 12 }
                                 ]
                             }
