@@ -68,3 +68,42 @@
     box-shadow: 0 20px 40px rgba(255,107,53,0.15);
     border: 3px solid var(--orange);
 }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .homepage-layout {
+        flex-direction: column;
+        gap: 24px;
+        margin-top: 30px;
+    }
+    .homepage-title {
+        font-size: 32px;
+    }
+    .homepage-title span {
+        font-size: 24px;
+    }
+    .homepage-textbox {
+        padding: 18px 20px;
+    }
+    .homepage-textbox p {
+        font-size: 15px;
+    }
+    .homepage-image {
+        order: -1;
+    }
+    .homepage-image img {
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .homepage-title {
+        font-size: 26px;
+    }
+    .homepage-title span {
+        font-size: 20px;
+    }
+    .homepage-label {
+        font-size: 14px;
+    }
+}

@@ -105,3 +105,36 @@
     box-shadow: 0 20px 40px rgba(255, 107, 53, 0.15);
     border: 3px solid var(--orange);
 }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        gap: 30px;
+        margin-top: 40px;
+    }
+    .login-form {
+        padding: 28px 20px;
+    }
+    .login-form h2 {
+        font-size: 26px;
+    }
+    .login-image {
+        order: -1;
+    }
+    .login-image img {
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        margin-top: 20px;
+    }
+    .login-form h2 {
+        font-size: 22px;
+    }
+    .login-form p {
+        font-size: 14px;
+    }
+}
