@@ -20,22 +20,12 @@ const PORT = process.env.PORT || 5000;
 // Security middleware
 app.use(helmet({ contentSecurityPolicy: false }));
 
-// CORS — allow any localhost port for local development
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:5500',
-  'http://127.0.0.1:3000',
-  'http://192.168.1.61:3000',
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
+// CORS Configuration
+// Allowing all origins so that custom domains work seamlessly without CORS blocking
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('onrender.com') || origin.includes('vercel.app') || origin === process.env.FRONTEND_URL) {
-      return callback(null, true);
-    }
-    callback(new Error('Not allowed by CORS'));
+    // allow all origins
+    callback(null, true);
   },
   credentials: true
 }));
