@@ -152,6 +152,16 @@
                 }
             }
 
+            // Silently ping the backend to wake it up from Render's cold sleep
+            // This runs in background so the server is warm by the time user clicks Login
+            (function wakeUpServer() {
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                if (!isLocal) {
+                    fetch('https://pharmaeasy-a9xk.onrender.com/api', { method: 'GET', cache: 'no-store' })
+                        .catch(() => {}); // silent — just waking it up
+                }
+            })();
+
             loginFormElement.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = loginEmail.value.trim();
@@ -165,24 +175,40 @@
                 loginBtn.disabled = true;
                 loginBtn.textContent = 'Logging in...';
 
+                // Show a "waking up" message if the server takes more than 4 seconds
+                // (Render free tier cold starts can take 30-50 seconds)
+                let wakeUpTimer = setTimeout(() => {
+                    loginBtn.textContent = '⏳ Waking up server...';
+                    showNotification('⏳ Server is starting up (Render free tier). Please wait up to 30 seconds...', 'warning');
+                }, 4000);
+
                 try {
                     const response = await apiCall('/login', {
                         method: 'POST',
                         body: JSON.stringify({ email, password })
                     });
 
+                    clearTimeout(wakeUpTimer);
+
                     if (response && response.success && response.token) {
                         setToken(response.token);
                         showNotification('Login successful! Redirecting...', 'success');
                         setTimeout(() => window.location.href = '/dashboard.html', 800);
                     } else {
-                        showNotification('Login failed. Please try again.', 'error');
+                        showNotification(response && response.message ? response.message : 'Login failed. Please check your credentials.', 'error');
                         loginBtn.disabled = false;
                         loginBtn.textContent = 'Login';
                     }
                 } catch (error) {
+                    clearTimeout(wakeUpTimer);
                     loginBtn.disabled = false;
                     loginBtn.textContent = 'Login';
+                    // Show a meaningful message instead of silently failing
+                    if (error.name === 'TypeError' || error.message === 'Failed to fetch') {
+                        showNotification('❌ Cannot reach the server. It may still be waking up — please try again in 30 seconds.', 'error');
+                    } else {
+                        showNotification(error.message || 'Login failed. Please try again.', 'error');
+                    }
                 }
             });
 

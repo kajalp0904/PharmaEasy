@@ -75,6 +75,7 @@ const routes = [
   { name: 'batchRoutes',     path: './routes/batchRoutes' },
   { name: 'billingRoutes',   path: './routes/billingRoutes' },
   { name: 'alertRoutes',     path: './routes/alertRoutes' },
+  { name: 'expiredBatchRoutes', path: './routes/expiredBatchRoutes' },
 ];
 
 routes.forEach(({ name, path: rPath }) => {
@@ -99,7 +100,12 @@ mongoose.connection.once('open', async () => {
 
 // Auto-heal service (optional)
 try {
-  require('./services/autoHeal');
+  if (process.env.PAUSE_CRON !== 'true') {
+    require('./services/autoHeal');
+    console.log('✅ Auto-heal cron job scheduled');
+  } else {
+    console.log('⏸️ Auto-heal cron job is paused via PAUSE_CRON env var');
+  }
 } catch (err) {
   // Not critical — skip silently
 }
