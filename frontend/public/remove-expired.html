@@ -215,7 +215,7 @@
             }
 
             try {
-                const response = await apiCall(`/expired-batches/${batchId}`, 'DELETE');
+                const response = await apiCall(`/expired-batches/${batchId}`, { method: 'DELETE' });
                 
                 if (response && response.success) {
                     const card = document.getElementById(`batch-card-${batchId}`);
