@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="css/medicines.css">
     <script src="js/api.js"></script>
 </head>
+
 <body>
     <div class="container">
         <!-- SIDEBAR -->
@@ -73,10 +75,10 @@
                 <table class="medicines-table" id="medicinesTable">
                     <thead>
                         <tr>
-                            <th onclick="sortTable('name')"      data-col="name">Medicine Name ↕</th>
-                            <th onclick="sortTable('category')"  data-col="category">Category ↕</th>
-                            <th onclick="sortTable('price')"     data-col="price">Price ↕</th>
-                            <th onclick="sortTable('totalStock')"data-col="totalStock">Total Stock ↕</th>
+                            <th onclick="sortTable('name')" data-col="name">Medicine Name ↕</th>
+                            <th onclick="sortTable('category')" data-col="category">Category ↕</th>
+                            <th onclick="sortTable('price')" data-col="price">Price ↕</th>
+                            <th onclick="sortTable('totalStock')" data-col="totalStock">Total Stock ↕</th>
                             <th>Min Stock</th>
                             <th>Status</th>
                         </tr>
@@ -93,7 +95,8 @@
             <div class="empty-state" id="emptyState" style="display:none;">
                 <span class="empty-state-icon">💊</span>
                 <div class="empty-state-title">No medicines found</div>
-                <div class="empty-state-text" id="emptyMessage">No medicines added yet. Add your first medicine to get started.</div>
+                <div class="empty-state-text" id="emptyMessage">No medicines added yet. Add your first medicine to get
+                    started.</div>
                 <a href="add-medicine.html" class="btn-primary" id="emptyBtn">➕ Add Medicine</a>
             </div>
         </div>
@@ -138,20 +141,20 @@
         function renderStats(medicines) {
             // Stats based only on medicines that have stock
             const withStock = medicines.filter(m => (m.totalStock || 0) > 0);
-            const lowCount  = withStock.filter(m => m.totalStock < m.minimumStock).length;
+            const lowCount = withStock.filter(m => m.totalStock < m.minimumStock).length;
             const goodCount = withStock.length - lowCount;
-            const cats      = new Set(withStock.map(m => m.category || 'General')).size;
+            const cats = new Set(withStock.map(m => m.category || 'General')).size;
 
             document.getElementById('statTotal').textContent = withStock.length;
-            document.getElementById('statGood').textContent  = goodCount;
-            document.getElementById('statLow').textContent   = lowCount;
-            document.getElementById('statCats').textContent  = cats;
+            document.getElementById('statGood').textContent = goodCount;
+            document.getElementById('statLow').textContent = lowCount;
+            document.getElementById('statCats').textContent = cats;
         }
 
         // ========== POPULATE CATEGORY DROPDOWN ==========
         function populateCategoryFilter(medicines) {
             const cats = [...new Set(medicines.map(m => m.category || 'General').filter(Boolean))].sort();
-            const sel  = document.getElementById('categoryFilter');
+            const sel = document.getElementById('categoryFilter');
             cats.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat;
@@ -162,9 +165,9 @@
 
         // ========== APPLY FILTERS ==========
         function applyFilters() {
-            const search   = document.getElementById('searchInput').value.trim().toLowerCase();
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
             const category = document.getElementById('categoryFilter').value;
-            const stock    = document.getElementById('stockFilter').value;
+            const stock = document.getElementById('stockFilter').value;
 
             let filtered = allMedicines.filter(m => {
                 // By default (and for good/low), hide zero-stock medicines
@@ -179,7 +182,7 @@
 
                 const isLow = m.totalStock < m.minimumStock;
                 const matchStock = (stock === '' || stock === 'all') ? true :
-                    (stock === 'low'  && isLow) ||
+                    (stock === 'low' && isLow) ||
                     (stock === 'good' && !isLow);
 
                 return matchSearch && matchCat && matchStock;
@@ -213,7 +216,7 @@
         function renderTable(medicines) {
             const tbody = document.getElementById('medicinesBody');
             const tableWrapper = document.getElementById('tableWrapper');
-            const emptyState   = document.getElementById('emptyState');
+            const emptyState = document.getElementById('emptyState');
 
             if (medicines.length === 0) {
                 tableWrapper.style.display = 'none';
@@ -281,4 +284,5 @@
         window.addEventListener('DOMContentLoaded', loadMedicines);
     </script>
 </body>
+
 </html>

@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Om Medical - Generate Bill</title>
     <link rel="stylesheet" href="css/generate-bill.css">
 </head>
+
 <body>
     <div class="container">
-        <!-- SIDEBAR (DARK) -->
+
         <div class="sidebar">
             <div class="sidebar-logo">
                 <h1>Om Medical</h1>
@@ -22,7 +24,7 @@
                 <a href="alerts.html" class="nav-item">Low Stock</a>
                 <a href="alerts.html" class="nav-item">Expiry Alerts</a>
                 <a href="remove-expired.html" class="nav-item">Remove Expired</a>
-                
+
             </nav>
         </div>
 
@@ -40,7 +42,8 @@
                         <!-- Medicine Name with Autocomplete -->
                         <div class="form-group">
                             <label for="medicine-name">Medicine Name</label>
-                            <input type="text" id="medicine-name" placeholder="Type to search medicines..." autocomplete="off">
+                            <input type="text" id="medicine-name" placeholder="Type to search medicines..."
+                                autocomplete="off">
                             <div id="suggestions" class="suggestions-container"></div>
                         </div>
                         <!-- Quantity and Add Button -->
@@ -54,25 +57,19 @@
                     </form>
                 </div>
 
-                <!-- RIGHT COLUMN – SELECTED ITEMS (EMPTY STATE) -->
                 <div class="cart-section">
                     <div class="cart-header">
                         <h3 class="cart-title">Selected Items</h3>
                     </div>
 
-                    <!-- EMPTY STATE – shown when no items in cart -->
                     <div id="emptyCart" class="empty-cart">
                         <div class="empty-cart-icon">🛒</div>
                         <div class="empty-cart-title">No items added yet</div>
                         <div class="empty-cart-text">Search and add medicines from the left panel.</div>
                     </div>
 
-                    <!-- CART ITEMS – hidden by default -->
                     <div id="cartItems" class="cart-items" style="display: none;">
-                        <!-- Cart items will be dynamically inserted here -->
                     </div>
-
-                    <!-- TOTAL SECTION – hidden by default -->
                     <div id="totalSection" class="total-section" style="display: none;">
                         <div class="total-row">
                             <span>Total Amount</span>
@@ -87,10 +84,7 @@
 
     <script src="js/api.js"></script>
     <script>
-        // ========== AUTHENTICATION CHECK ==========
         requireAuth();
-
-        // ========== AUTOCOMPLETE FUNCTIONALITY ==========
         const medicineInput = document.getElementById('medicine-name');
         const suggestionsContainer = document.getElementById('suggestions');
         const quantityInput = document.getElementById('quantity');
@@ -100,16 +94,10 @@
         const totalSection = document.getElementById('totalSection');
         const totalAmount = document.getElementById('totalAmount');
 
-        // Selected medicine (when user clicks a suggestion)
         let selectedMedicine = null;
 
-        // Cart array
         let cart = [];
-
-        // Debounce timer for search
         let searchTimeout = null;
-
-        // Fetch medicines from API with debounce
         async function searchMedicines(query) {
             if (!query || query.length < 2) {
                 suggestionsContainer.classList.remove('active');
@@ -124,8 +112,6 @@
                 suggestionsContainer.classList.remove('active');
             }
         }
-
-        // Display suggestions
         function displaySuggestions(medicines) {
             if (medicines.length === 0) {
                 suggestionsContainer.classList.remove('active');
@@ -134,7 +120,6 @@
 
             let html = '';
             medicines.forEach(med => {
-                // Escape single quotes in medicine name for onclick
                 const safeName = med.name.replace(/'/g, "\\'");
                 html += `<div class="suggestion-item" onclick="selectMedicine('${med._id}', '${safeName}', ${med.price}, ${med.totalStock})">
                             <strong>${med.name}</strong> 
@@ -146,40 +131,37 @@
             suggestionsContainer.classList.add('active');
         }
 
-        // Select a medicine from suggestions
-        window.selectMedicine = function(id, name, price, stock) {
+        window.selectMedicine = function (id, name, price, stock) {
             medicineInput.value = name;
             selectedMedicine = { id, name, price, stock };
             suggestionsContainer.classList.remove('active');
         };
 
         // Hide suggestions when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!medicineInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
                 suggestionsContainer.classList.remove('active');
             }
         });
 
         // Trigger suggestions on input with debounce
-        medicineInput.addEventListener('input', function() {
+        medicineInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             const query = medicineInput.value.trim();
-            
+
             if (query.length < 2) {
                 suggestionsContainer.classList.remove('active');
                 return;
             }
-            
-            // Debounce: wait 300ms after user stops typing
+
             searchTimeout = setTimeout(() => {
                 searchMedicines(query);
             }, 300);
         });
 
-        // ========== ADD ITEM TO CART ==========
         addItemForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
+
             if (!selectedMedicine) {
                 showNotification('Please select a medicine from the suggestions', 'warning');
                 return;
@@ -191,7 +173,6 @@
                 return;
             }
 
-            // Check if item already in cart
             const existingItem = cart.find(item => item.id === selectedMedicine.id);
             if (existingItem) {
                 existingItem.quantity += quantity;
@@ -214,7 +195,7 @@
         });
 
         // ========== REMOVE ITEM FROM CART ==========
-        window.removeItem = function(index) {
+        window.removeItem = function (index) {
             cart.splice(index, 1);
             updateCartDisplay();
         };
@@ -254,75 +235,72 @@
             }
         }
 
-       // ========== GENERATE BILL ==========
-document.getElementById('generateBillBtn').addEventListener('click', async () => {
-    if (cart.length === 0) {
-        showNotification('No items in cart', 'error');
-        return;
-    }
+        // ========== GENERATE BILL ==========
+        document.getElementById('generateBillBtn').addEventListener('click', async () => {
+            if (cart.length === 0) {
+                showNotification('No items in cart', 'error');
+                return;
+            }
 
-    try {
-        // Prepare request payload for backend API
-        const requestPayload = {
-            items: cart.map(item => ({
-                medicineName: item.name,
-                quantityRequired: item.quantity
-            })),
-            customerName: 'Walk-in Customer',
-            paymentMethod: 'Cash'
-        };
+            try {
+                // Prepare request payload for backend API
+                const requestPayload = {
+                    items: cart.map(item => ({
+                        medicineName: item.name,
+                        quantityRequired: item.quantity
+                    })),
+                    customerName: 'Walk-in Customer',
+                    paymentMethod: 'Cash'
+                };
 
-        // Call backend API to generate bill
-        const response = await apiCall('/generate-bill', {
-            method: 'POST',
-            body: JSON.stringify(requestPayload)
+                // Call backend API to generate bill
+                const response = await apiCall('/generate-bill', {
+                    method: 'POST',
+                    body: JSON.stringify(requestPayload)
+                });
+
+                // Calculate display values
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const total = response.totalAmount || subtotal;
+
+                // Generate date string
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                }) + ', ' + now.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+
+                // Prepare bill data for success page
+                const billData = {
+                    billId: response.billNumber || `#${response.billId}`,
+                    date: dateStr,
+                    items: cart.map(item => ({
+                        name: item.name,
+                        quantity: item.quantity,
+                        price: item.price
+                    })),
+                    subtotal: subtotal,
+                    total: total
+                };
+
+                sessionStorage.setItem('currentBill', JSON.stringify(billData));
+
+                showNotification('Bill generated successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'bill-success.html';
+                }, 500);
+
+            } catch (error) {
+                console.error('Bill generation error:', error);
+                // Error notification is already shown by apiCall
+            }
         });
-
-        // Calculate display values
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const total = response.totalAmount || subtotal;
-
-        // Generate date string
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        }) + ', ' + now.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-
-        // Prepare bill data for success page
-        const billData = {
-            billId: response.billNumber || `#${response.billId}`,
-            date: dateStr,
-            items: cart.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price
-            })),
-            subtotal: subtotal,
-            total: total
-        };
-
-        // Store in sessionStorage
-        sessionStorage.setItem('currentBill', JSON.stringify(billData));
-
-        // Show success notification
-        showNotification('Bill generated successfully!', 'success');
-
-        // Redirect to success page
-        setTimeout(() => {
-            window.location.href = 'bill-success.html';
-        }, 500);
-
-    } catch (error) {
-        console.error('Bill generation error:', error);
-        // Error notification is already shown by apiCall
-    }
-});
     </script>
 </body>
+
 </html>

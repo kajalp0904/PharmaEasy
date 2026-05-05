@@ -16,21 +16,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+
         .batch-info {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
+
         .batch-info strong {
             color: #2d2d2d;
             font-size: 1.1em;
         }
+
         .batch-details {
             color: #666;
             font-size: 0.95em;
         }
+
         .remove-btn {
             background-color: #d32f2f;
             color: white;
@@ -41,27 +45,32 @@
             font-weight: 600;
             transition: background 0.2s;
         }
+
         .remove-btn:hover {
             background-color: #b71c1c;
         }
+
         .message-box {
             padding: 12px;
             border-radius: 6px;
             margin-bottom: 16px;
             display: none;
         }
+
         .message-success {
             background-color: #e8f5e9;
             color: #2e7d32;
             border: 1px solid #c8e6c9;
             display: block;
         }
+
         .message-error {
             background-color: #ffebee;
             color: #c62828;
             border: 1px solid #ffcdd2;
             display: block;
         }
+
         .message-info {
             background-color: #e3f2fd;
             color: #0d47a1;
@@ -164,7 +173,7 @@
 
             try {
                 const response = await apiCall(`/expired-batches?medicine=${encodeURIComponent(query)}`);
-                
+
                 if (!response || !response.success) {
                     throw new Error(response?.error || 'Failed to search');
                 }
@@ -191,7 +200,7 @@
             let html = '';
             batches.forEach(batch => {
                 const expiryStr = new Date(batch.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                
+
                 html += `
                     <div class="batch-card" id="batch-card-${batch.id}">
                         <div class="batch-info">
@@ -216,7 +225,7 @@
 
             try {
                 const response = await apiCall(`/expired-batches/${batchId}`, { method: 'DELETE' });
-                
+
                 if (response && response.success) {
                     const card = document.getElementById(`batch-card-${batchId}`);
                     if (card) {
@@ -228,7 +237,7 @@
                         searchResults.innerHTML = ''; // Clear other results if medicine deleted
                     } else {
                         showMessage(`Batch removed successfully. Remaining total stock is now ${response.newTotalStock}.`, 'success');
-                        
+
                         // Check if all cards are removed
                         if (searchResults.children.length === 0) {
                             searchResults.innerHTML = '<div style="color: #666; margin-top: 20px;">All expired batches processed.</div>';
@@ -244,4 +253,5 @@
         }
     </script>
 </body>
+
 </html>

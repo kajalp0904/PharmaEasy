@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Om Medical - Alerts (React)</title>
+    <title>Om Medical - Alerts </title>
     <link rel="stylesheet" href="css/alerts.css">
 </head>
+
 <body>
     <div class="container">
-        <!-- SIDEBAR (stays static HTML - no need for React here) -->
         <div class="sidebar">
             <div class="sidebar-logo">
                 <h1>Om Medical</h1>
@@ -25,27 +26,24 @@
             </nav>
         </div>
 
-        <!-- MAIN CONTENT - REACT MOUNTS HERE -->
         <div class="main-content">
             <div id="react-alerts-root"></div>
         </div>
     </div>
 
-    <!-- Load api.js first for auth & apiCall -->
     <script src="js/api.js"></script>
 
-    <!-- ==================== VANILLA JS APP ==================== -->
     <script>
         requireAuth();
-        
+
         let alertsData = { lowStock: [], expiringSoon: [], expired: [] };
         let counts = { lowStock: 0, expiringSoon: 0, expired: 0 };
         let activeTab = 'lowStock';
         let lastUpdated = null;
         let isRefreshing = false;
-        
+
         const rootItem = document.getElementById('react-alerts-root');
-        
+
         function renderHeader() {
             return `
                 <div class="header">
@@ -66,13 +64,13 @@
                 { key: 'expiringSoon', label: 'Expiring Soon' },
                 { key: 'expired', label: 'Expired' }
             ];
-            
+
             let html = '<div class="tabs">';
             tabs.forEach(tab => {
                 const isActive = activeTab === tab.key;
                 const tabClass = isActive ? 'tab-btn active' : 'tab-btn';
                 const badgeHtml = `<span style="display: inline-block; padding: 2px 10px; background-color: #ff6b35; color: white; border-radius: 12px; font-size: 13px; font-weight: 700; min-width: 24px; text-align: center;">${counts[tab.key] || 0}</span>`;
-                
+
                 html += `<button class="${tabClass}" onclick="switchTab('${tab.key}')">${tab.label} ${badgeHtml}</button>`;
             });
             html += '</div>';
@@ -91,7 +89,7 @@
                     </div>
                 `;
             }
-            
+
             let html = '<div class="alert-list">';
             alerts.forEach(alert => {
                 if (activeTab === 'lowStock') {
@@ -164,15 +162,15 @@
             rootItem.innerHTML = renderHeader() + renderTabs() + renderAlertsList() + renderFooter();
         }
 
-        window.switchTab = function(tabName) {
+        window.switchTab = function (tabName) {
             activeTab = tabName;
             renderUI();
         }
 
-        window.fetchAlerts = async function() {
+        window.fetchAlerts = async function () {
             isRefreshing = true;
             renderUI();
-            
+
             try {
                 const response = await apiCall('/alerts', { method: 'GET' });
                 if (response && response.alerts) {
@@ -187,10 +185,11 @@
                 renderUI();
             }
         }
-        
+
         // Initial load
         rootItem.innerHTML = '<div class="loading">⏳ Loading alerts...</div>';
         fetchAlerts();
     </script>
 </body>
+
 </html>

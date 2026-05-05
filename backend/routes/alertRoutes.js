@@ -150,6 +150,13 @@ router.get("/dashboard", auth, async (req, res) => {
     const Bill = mongoose.model('Bill');
     
     // Get ALL real data in parallel
+    // Calculate start of today in IST (UTC+5.5)
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const nowUTC = new Date();
+    const istNow = new Date(nowUTC.getTime() + istOffset);
+    const startOfTodayIST = new Date(istNow.setUTCHours(0, 0, 0, 0));
+    const startOfTodayInUTC = new Date(startOfTodayIST.getTime() - istOffset);
+
     const [
       medicines,
       batches,
@@ -168,10 +175,10 @@ router.get("/dashboard", auth, async (req, res) => {
         $expr: { $lt: ["$totalStock", "$minimumStock"] }
       }).lean(),
       Batch.find({
-        expiryDate: { $lte: new Date(Date.now() + 30*86400000), $gt: new Date() },
+        expiryDate: { $lte: new Date(Date.now() + 30 * 86400000), $gt: new Date() },
         quantity: { $gt: 0 }
       }).populate('medicine', 'name').limit(10).lean(),
-      Bill.find({ createdAt: { $gte: new Date(new Date().setHours(0,0,0,0)) } }).lean(),
+      Bill.find({ createdAt: { $gte: startOfTodayInUTC } }).lean(),
       Batch.aggregate([
         { $match: { quantity: { $gt: 0 } } },
         { $lookup: { from: 'medicines', localField: 'medicine', foreignField: '_id', as: 'med' } },

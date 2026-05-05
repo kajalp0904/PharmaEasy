@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,10 @@
     <link rel="stylesheet" href="css/add-medicine.css">
     <script src="js/api.js"></script>
 </head>
+
 <body>
     <div class="container">
-        <!-- SIDEBAR (DARK) -->
+
         <div class="sidebar">
             <div class="sidebar-logo">
                 <h1>Om Medical</h1>
@@ -23,7 +25,7 @@
                 <a href="alerts.html" class="nav-item">Low Stock</a>
                 <a href="alerts.html" class="nav-item">Expiry Alerts</a>
                 <a href="remove-expired.html" class="nav-item">Remove Expired</a>
-               
+
             </nav>
         </div>
 
@@ -39,12 +41,14 @@
                 <form id="addMedicineForm">
                     <div class="form-group">
                         <label for="medicine-name">Medicine Name *</label>
-                        <input type="text" id="medicine-name" name="medicine-name" placeholder="Enter medicine name" required>
+                        <input type="text" id="medicine-name" name="medicine-name" placeholder="Enter medicine name"
+                            required>
                     </div>
 
                     <div class="form-group">
                         <label for="medicine-price">Price (₹) *</label>
-                        <input type="number" id="medicine-price" name="medicine-price" step="0.01" placeholder="Enter price" min="0.01" required>
+                        <input type="number" id="medicine-price" name="medicine-price" step="0.01"
+                            placeholder="Enter price" min="0.01" required>
                     </div>
 
                     <div class="form-group">
@@ -59,15 +63,18 @@
                         </div>
                         <div class="form-group">
                             <label for="minimum-stock">Minimum Stock</label>
-                            <input type="number" id="minimum-stock" name="minimum-stock" placeholder="Default: 10" min="1">
+                            <input type="number" id="minimum-stock" name="minimum-stock" placeholder="Default: 10"
+                                min="1">
                         </div>
                     </div>
 
-                    <h4 style="margin: 15px 0 10px 0; color: #444; border-bottom: 1px solid #eee; padding-bottom: 5px;">Initial Stock (Optional)</h4>
+                    <h4 style="margin: 15px 0 10px 0; color: #444; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                        Initial Stock (Optional)</h4>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="initial-quantity">Quantity</label>
-                            <input type="number" id="initial-quantity" name="initial-quantity" placeholder="e.g., 50" min="1">
+                            <input type="number" id="initial-quantity" name="initial-quantity" placeholder="e.g., 50"
+                                min="1">
                         </div>
                         <div class="form-group">
                             <label for="initial-batch">Batch Number</label>
@@ -83,30 +90,33 @@
                 </form>
             </div>
 
-            <!-- BATCH FORM (Auto‑assign location) -->
             <div class="form-container" style="margin-top: 30px;">
                 <h3>Add Batch to Existing Medicine</h3>
                 <form id="addBatchForm">
                     <div class="form-group">
                         <label for="batch-medicine">Medicine *</label>
-                        <input type="text" id="batch-medicine" name="batch-medicine" placeholder="Search medicine..." required autocomplete="off">
+                        <input type="text" id="batch-medicine" name="batch-medicine" placeholder="Search medicine..."
+                            required autocomplete="off">
                         <div id="medicine-dropdown" class="autocomplete-dropdown"></div>
                         <input type="hidden" id="selected-medicine-id" name="selected-medicine-id">
                     </div>
 
                     <div class="form-group">
                         <label for="batch-number">Batch Number *</label>
-                        <input type="text" id="batch-number" name="batch-number" placeholder="Enter batch number" required>
+                        <input type="text" id="batch-number" name="batch-number" placeholder="Enter batch number"
+                            required>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="batch-quantity">Quantity *</label>
-                            <input type="number" id="batch-quantity" name="batch-quantity" placeholder="Enter quantity" min="1" required>
+                            <input type="number" id="batch-quantity" name="batch-quantity" placeholder="Enter quantity"
+                                min="1" required>
                         </div>
                         <div class="form-group">
                             <label for="batch-price">Price (₹) *</label>
-                            <input type="number" id="batch-price" name="batch-price" step="0.01" placeholder="Enter price" min="0.01" required>
+                            <input type="number" id="batch-price" name="batch-price" step="0.01"
+                                placeholder="Enter price" min="0.01" required>
                         </div>
                     </div>
 
@@ -115,7 +125,6 @@
                         <input type="date" id="expiry-date" name="expiry-date" required>
                     </div>
 
-                    <!-- Location is automatically assigned – no dropdown -->
 
                     <button type="submit" class="submit-button">➕ Add Batch</button>
                 </form>
@@ -124,19 +133,15 @@
     </div>
 
     <script>
-        // Ensure user is authenticated
         requireAuth();
 
-        // Helper to get a free location — auto-initializes if none exist
         async function getFreeLocation() {
             try {
                 let locations = await apiCall('/locations/free');
 
-                // If no locations at all, auto-initialize 100 locations
                 if (!Array.isArray(locations) || locations.length === 0) {
                     showNotification('⚙️ Setting up storage locations...', 'info');
                     await apiCall('/init-locations', { method: 'POST' });
-                    // Retry after init
                     locations = await apiCall('/locations/free');
                 }
 
@@ -150,7 +155,6 @@
             }
         }
 
-        // Medicine form submission
         document.getElementById('addMedicineForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -168,7 +172,6 @@
                 return;
             }
 
-            // Validate that if any initial stock field is filled, all must be filled
             const hasAnyInitial = initialQuantity || initialBatch || initialExpiry;
             if (hasAnyInitial && (!initialQuantity || !initialBatch || !initialExpiry)) {
                 showNotification('Please fill all three fields (Quantity, Batch Number, Expiry Date) to add initial stock.', 'error');
@@ -217,7 +220,7 @@
             }
         });
 
-        // Batch form submission — location auto-assigned by backend
+
         document.getElementById('addBatchForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -228,7 +231,7 @@
             const price = parseFloat(document.getElementById('batch-price').value);
             const expiryDate = document.getElementById('expiry-date').value;
 
-            // Auto-fallback: if they typed a name but forgot to click the dropdown list
+
             if (!medicineId && medicineSearchName) {
                 try {
                     const searchRes = await apiCall(`/medicines/search?q=${encodeURIComponent(medicineSearchName)}`);
@@ -237,7 +240,7 @@
                         medicineId = match._id;
                         document.getElementById('selected-medicine-id').value = medicineId;
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
 
             if (!medicineId) {
@@ -262,7 +265,7 @@
                         quantity,
                         price,
                         expiryDate
-                        // No location sent — backend auto-assigns one
+
                     })
                 });
 
@@ -282,12 +285,11 @@
         });
 
 
-        // Medicine search autocomplete for batch form
         const medicineSearch = document.getElementById('batch-medicine');
         const dropdown = document.getElementById('medicine-dropdown');
         let searchTimeout;
 
-        medicineSearch.addEventListener('input', function() {
+        medicineSearch.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             const query = this.value.trim();
             if (query.length < 2) {
@@ -332,4 +334,5 @@
         });
     </script>
 </body>
+
 </html>

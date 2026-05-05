@@ -35,10 +35,7 @@
                 <button id="logoutBtn" class="logout-btn" onclick="logout()">Logout</button>
             </div>
 
-            <!-- ===== REACT: LIVE STATS CARDS ===== -->
             <div id="react-stats-root"></div>
-
-            <!-- ===== LIVE MEDICINE SEARCH WITH AUTOCOMPLETE ===== -->
 
             <div class="search-section">
                 <div class="search-title">
@@ -54,17 +51,12 @@
                         <span>🔍</span> Search
                     </button>
                 </div>
-
-                <!-- Loading indicator (hidden by default) -->
                 <div id="loadingIndicator" style="display: none; margin-top: 15px; color: #ff6b35;">
                     <span>⏳ Loading...</span>
                 </div>
-
-                <!-- SEARCH RESULTS (initially hidden) -->
                 <div id="searchResults" class="results-container"></div>
             </div>
 
-            <!-- QUICK ACTIONS -->
             <h2 class="section-title">Quick Actions</h2>
             <div class="quick-actions">
                 <div class="quick-action-card" onclick="location.href='add-medicine.html'">
@@ -82,8 +74,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- RECENT MEDICINES -->
             <h2 class="section-title">Om Medical</h2>
             <div class="empty-state">
                 <div class="empty-state-icon">💊</div>
@@ -94,23 +84,22 @@
         </div>
     </div>
 
-    <!-- ==================== VANILLA JS: DASHBOARD STATS CARDS ==================== -->
     <script>
         async function loadDashboardStats() {
             const root = document.getElementById('react-stats-root');
             root.innerHTML = '<div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap"><div class="stat-card" style="width:100%;text-align:center;justify-content:center;color:#7a7a7a;">Loading data...</div></div>';
-            
+
             try {
                 const data = await apiCall('/dashboard');
                 const stats = data && data.summary ? data.summary : {};
-                
+
                 const cards = [
                     { label: 'Total Medicines', value: stats.totalMedicines ?? 0, color: '#2d2d2d', link: 'medicines.html' },
                     { label: 'Low Stock Alerts', value: stats.lowStockAlerts ?? 0, color: '#c62828', link: 'alerts.html' },
                     { label: 'Expiring Soon', value: stats.expiringSoon ?? 0, color: '#e65100', link: 'alerts.html' },
                     { label: "Today's Bills", value: stats.todayTransactions ?? 0, color: '#2e7d32', link: 'billing-history.html' }
                 ];
-                
+
                 let statsHtml = '<div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;flex:1;width:100%">';
                 cards.forEach(card => {
                     statsHtml += `
@@ -129,27 +118,22 @@
                 root.innerHTML = '<div class="stat-card" style="border-left-color: #f44336; width:100%;"><div class="stat-body"><span class="stat-label">Error</span><span class="stat-value" style="color:#c62828; font-size: 16px;">Failed to load stats</span></div></div>';
             }
         }
-        
+
         loadDashboardStats();
     </script>
 
-    <!-- ==================== VANILLA JS: SEARCH (unchanged) ==================== -->
     <script>
-        // ========== AUTHENTICATION CHECK ==========
         requireAuth();
 
-        // ========== CONFIGURATION ==========
         let searchTimeout = null;
         let selectedMedicineId = null;
 
-        // ========== DOM ELEMENTS ==========
         const searchInput = document.getElementById('medicineSearchInput');
         const suggestionsDropdown = document.getElementById('suggestionsDropdown');
         const searchResults = document.getElementById('searchResults');
         const searchBtn = document.getElementById('searchBtn');
         const loadingIndicator = document.getElementById('loadingIndicator');
 
-        // ========== FETCH MEDICINE SUGGESTIONS ==========
         async function fetchMedicineSuggestions(query) {
             if (!query || query.length < 2) {
                 suggestionsDropdown.classList.remove('active');
@@ -165,7 +149,6 @@
             }
         }
 
-        // ========== DISPLAY SUGGESTIONS DROPDOWN ==========
         async function showSuggestions() {
             const query = searchInput.value.trim();
 
@@ -192,20 +175,16 @@
             suggestionsDropdown.classList.add('active');
         }
 
-        // ========== DEBOUNCED INPUT HANDLER ==========
         searchInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(showSuggestions, 300);
         });
-
-        // ========== HIDE SUGGESTIONS WHEN CLICKING OUTSIDE ==========
         document.addEventListener('click', function (e) {
             if (!searchInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
                 suggestionsDropdown.classList.remove('active');
             }
         });
 
-        // ========== SELECT A MEDICINE FROM SUGGESTIONS ==========
         window.selectMedicine = function (medicineId, medicineName) {
             searchInput.value = medicineName;
             selectedMedicineId = medicineId;
@@ -213,7 +192,6 @@
             performSearch(medicineId, medicineName);
         };
 
-        // ========== SEARCH BUTTON / ENTER ==========
         function searchMedicine() {
             const query = searchInput.value.trim();
             if (!query) {
@@ -247,7 +225,6 @@
             }
         }
 
-        // ========== PERFORM SEARCH (FETCH MEDICINE + BATCHES) ==========
         async function performSearch(medicineId, medicineName) {
             loadingIndicator.style.display = 'block';
             searchResults.classList.remove('active');
@@ -278,7 +255,6 @@
             }
         }
 
-        // ========== DISPLAY MEDICINE DETAILS ==========
         function displayMedicineDetails(medicine, batches) {
             const activeBatches = batches.filter(batch => batch.quantity > 0);
 
@@ -401,7 +377,6 @@
             searchResults.classList.add('active');
         }
 
-        // ========== EVENT LISTENERS ==========
         searchBtn.addEventListener('click', searchMedicine);
         searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
